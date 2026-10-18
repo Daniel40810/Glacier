@@ -1,0 +1,27 @@
+# Glacier · Regiebuch (Phase 14), Format wie sommertag.txt. Die Uhr steht; die Ruptura läuft mit ihrem eigenen
+# Zeitraffer je Abschnitt (Stau 30 s, Sickern 45 s, Tunnel 1 min, Decke 1 min, Brücke bis 45 s, Abfluss gut 1 min).
+# Die Fotos liegen in der Mitte der Abschnitte. Gestaltet [G].
+Regiebuch: Die Ruptura
+Beschreibung: 4.3.2027: der Brazo Rico steht 21 m über dem Hauptsee, der Tunnel, die Decke, die Brücke, der Einsturz, der Abfluss – fünf Wochen in fünfeinhalb Minuten
+Länge: 5:31
+0:00 zeit 04.03.2027 15:00 | Anfang März: der Brazo Rico staut sich hinter dem Damm
+0:00 raffer 0
+0:00 wetter_frei KLAR 3 300
+0:00 kalbung_regie aus
+0:00 figuren aus
+0:00 ruptura
+0:00 ansicht Brazo Rico
+0:20 foto Brazo Rico: der Stau, der Damm von Süden
+0:30 ansicht Die Brücke | das Wasser frisst einen Tunnel unter dem Damm
+1:05 foto Vom Steg: der Damm vor dem Durchbruch
+1:45 foto Vom Steg: Durchbruch, der Tunnel weitet sich
+2:40 foto Vom Steg: die Decke stürzt in die Rinne
+2:55 ansicht Brazo Rico | die Brücke steht allein
+3:02 foto Brazo Rico: die Brücke von Süden
+3:10 ansicht Die Brücke
+3:20 foto Vom Steg: die Brücke vor dem Einsturz
+4:05 foto Vom Steg: nach dem Einsturz
+4:40 foto Vom Steg: die Flut in der Rinne
+5:20 foto Vom Steg: der Brazo Rico ist leergelaufen
+5:30 blatt Die Ruptura | die Ruptura ist vorbei
+5:30 sage Die Ruptura ist zu Ende

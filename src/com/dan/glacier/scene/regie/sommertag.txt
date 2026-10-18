@@ -1,0 +1,45 @@
+# Glacier · Regiebuch (Phase 14). Eine Zeile je Stichwort: Zeit (Minuten:Sekunden echte Zeit), Befehl, Argumente, nach
+# „ | “ der Text fürs HUD. Mehrere Befehle zur selben Zeit sind ein Stichwort. Befehle: zeit, raffer, wetter,
+# wetter_frei, ansicht, fahrt, boot, aussteigen, kalbung, kalbung_regie, ruptura, damm, figuren, foto, blatt, sage.
+# Gestaltet [G].
+Regiebuch: Ein Sommertag an der Front
+Beschreibung: 16.1.2026, 6 bis 22 Uhr im Zeitraffer 60: Seenebel am Morgen, Kalbungen über den Tag, der Katamaran, auf dem Eis, durch die Spalte, abends Licht von Westen
+Länge: 16:01
+Wetter: 06:00 | 60
+Schritt: 2.5 | NEBEL | Seenebel vor der Front | WIND=1 DIRECTION=270 COVER=1 FOG=0.8 VISIBILITY=4 TEMPERATURE=6 HUMIDITY=95 | Vom Steg
+Schritt: 1.5 | KLAR | Der Nebel hebt sich | WIND=3 DIRECTION=270 FOG=0.2 COVER=1 VISIBILITY=30 TEMPERATURE=10 HUMIDITY=80 | Südflanke
+Schritt: 7 | KLAR | Ein klarer Sommertag, Westwind vom Eisfeld | WIND=6 DIRECTION=275 COVER=2 VISIBILITY=60 FOG=0 TEMPERATURE=16 HUMIDITY=55 | Vom Boot
+Schritt: 5 | KLAR | Abend, Licht von Westen | WIND=4 DIRECTION=280 COVER=3 VISIBILITY=60 TEMPERATURE=12 HUMIDITY=60 | Vom Steg
+0:00 zeit 16.01.2026 06:00 | 6 Uhr: Seenebel über dem Lago Argentino
+0:00 wetter
+0:00 raffer 60
+0:00 damm aus
+0:00 kalbung_regie an
+0:00 figuren aus
+0:00 ansicht Vom Steg
+1:30 foto Vom Steg: Nebel vor der Front
+2:30 ansicht Südflanke | 8:30: der Nebel hebt sich
+2:40 kalbung Scheibe | an der Südflanke sackt eine Scheibe ab
+3:10 foto Südflanke: der Nebel hebt sich, eine Scheibe fällt
+4:00 boot | 10 Uhr: der Katamaran legt ab
+5:30 kalbung Turm | vor dem Boot bricht ein Turm
+5:52 foto An Bord: ein Turm bricht
+7:00 aussteigen
+7:00 ansicht Auf dem Eis | 13 Uhr: auf der Zunge
+7:30 foto Auf dem Eis: Spalten in der Mittagssonne
+8:00 fahrt Durch die Spalte | 14 Uhr: durch die Spalte
+8:36 foto In der Spalte: das blaue Eis
+9:30 ansicht Vom Berg | 15:30: der Gletscher von oben
+9:54 foto Vom Berg: die Front und der Kanal
+11:00 ansicht Vom Steg | 17 Uhr: Kalbungen am Nachmittag
+11:05 kalbung Turm
+11:24 foto Vom Steg: ein Turm kippt
+12:30 ansicht Unter Wasser | 18:30: der Fuß der Front
+12:54 foto Unter Wasser: Eisberge von unten
+13:30 ansicht Südflanke | 19:30: Abendlicht in den Spalten
+14:06 foto Südflanke: Licht von Westen
+15:00 ansicht Vom Steg | 21 Uhr: Dämmerung
+15:42 foto Vom Steg: die lange Dämmerung im Januar
+16:00 blatt Ein Sommertag an der Front | 22 Uhr: Ende des Tages
+16:00 raffer 1
+16:00 sage Ein Sommertag an der Front ist zu Ende

@@ -1,0 +1,37 @@
+# Glacier · die belegten Rupturas des Perito Moreno (Phase 15, F29 A), recherchiert am 18.10.2026.
+# Je Zeile: JAHR | NR | DATUM (yyyy, yyyy-mm oder yyyy-mm-dd) | STAU_M | ABFLUSS_M3S | DAUER_H | TEXT | QUELLEN (Kurzzeichen, Komma)
+# Leer heißt: keine Quelle nennt den Wert. Abweichende Angaben der Quellen stehen im Text, Unsicheres mit [zu prüfen].
+# Nicht aufgenommen: 1986 und 2022 (nur ein Reiseblog), 29.8.2024 (Video, Art des Ereignisses unklar); nach 12/2019 nennen
+# La Nación und Wikipedia keine Ruptura, Ámbito (8/2025) einen Rückzug der Front um 800 m seit 2019.
+1917 | 1 | 1917 | | | | Erster dokumentierter Stau und Bruch | ESWR, ESWG, STU07
+1935 | 1 | 1935 | | | | Die Wikipedia-Seiten nennen 1934 oder 1935 [zu prüfen] | ESWR, ESWG
+1940 | 1 | 1940-02 | | | | Bruch im Februar von selbst, nachdem eine Sprengung 1939 gescheitert war | ESWR, ENWP
+1942 | 1 | 1942 | | | | Nur in der spanischen Ruptura-Seite und der englischen Wikipedia [zu prüfen] | ESWR, ENWP
+1947 | 1 | 1947 | | | | | ESWR, ESWG
+1951 | 1 | 1951 | | | | Nur in ESWG, vielleicht dasselbe Ereignis wie 1952 [zu prüfen] | ESWG
+1952 | 1 | 1952 | | | | Der Stau überflutete 6 670 ha [zu prüfen] | ESWR
+1953 | 1 | 1953 | | | | In den 1950er Jahren über 26 m Stau (Raffo), nicht jahresgenau [zu prüfen] | ESWR, ESWG
+1956 | 1 | 1956 | | | | | ESWR, ESWG
+1960 | 1 | 1960 | | | | | ESWR, ESWG
+1963 | 1 | 1963 | | | | | ESWR, ESWG
+1966 | 1 | 1966-02 | 28.4 | 2000 | | Größter bekannter Stau, über anderthalb Jahre (1964–65); Abfluss mehr als 2 000 m³/s am Pegel Charles Fuhr | ESWR, STU07, ENWP
+1970 | 1 | 1970 | | | | | ESWR, ESWG
+1972 | 1 | 1972 | | | | | ESWR, ESWG
+1975 | 1 | 1975 | | | | | ESWR, ESWG
+1977 | 1 | 1977 | | | | | ESWR, ESWG
+1980 | 1 | 1980 | | | | | ESWR, ESWG
+1984 | 1 | 1984 | | | | | ESWR, ESWG
+1988 | 1 | 1988-02 | 19 | | | Letzter großer Stau vor 2003; Skvarca nennt 18 m [zu prüfen] | ESWR, ESWG, LN18B, STU07
+1994 | 1 | 1994 | | | | Kleines Ereignis „ähnlich wie 1996“, ohne Werte [zu prüfen] | ESWR, ENWP
+1995 | 1 | 1995 | | | | Kleines Ereignis „ähnlich wie 1996“ [zu prüfen] | ESWR, ENWP
+1997 | 1 | 1997-01 | 1 | 123 | | Geschlossen im Oktober 1996, Abflussspitze Ende Januar, Ausgleich Anfang April; keine Brücke | ESWR, ENWP
+1997 | 2 | 1997 | | | | Kleines Ereignis „ähnlich wie 1996“ [zu prüfen] | ESWR, ENWP
+2004 | 1 | 2004-03-14 | 9.35 | 5000 | 96 | Geschlossen 9/2003, Abfluss ab 11./12.3., Einsturz 19:10; andere Angaben 10,5 m und 8 m Stau [zu prüfen] | LN18A, STU07, ESA04, ENWP
+2006 | 1 | 2006-03-13 | 5.4 | 5850 | 96 | Geschlossen 8/2005, Abfluss ab 10.3.; das Dach des Tunnels fiel nachts gegen Mitternacht, keine Bilder; 5,4 m nur in Wikipedia [zu prüfen] | LN18A, STU07, ENWP
+2008 | 1 | 2008-07-09 | 9 | 8000 | 96 | Die einzige Ruptura im Winter: Einsturz 11:20 vor rund 40 Zeugen, Schnee, −7 °C | LN18A, LN18B, ENWP
+2012 | 1 | 2012-03-05 | | 2000 | 336 | Einsturz um 03:45, nachts, keine Zeugen | LN18A, LN12, ENWP
+2013 | 1 | 2013-01-19 | 2.2 | 205 | 2040 | „Mini-Ruptura“ ab 19 Uhr; Pegel am höchsten am 21.11.2012, Abflussspitze 4.2.2013, 85 Tage [zu prüfen] | LN13, DC13, ENWP, ESWR
+2013 | 2 | 2013-12 | 3.7 | 220 | 1560 | Allmählich durch den Tunnel ab Ende Dezember, 65 Tage; kein Einsturz einer Brücke belegt [zu prüfen] | ESWR, ENWP
+2016 | 1 | 2016-03-10 | 10.5 | | 48 | Einsturz 10:55 bei Nieselregen, der Brazo Rico in 48 h leer; 10,49 m über dem Normalpegel | LN18A, LN16, CONC16, LN18B
+2018 | 1 | 2018-03-11 | 14.4 | | | Geschlossen am 2.8.2017; die Brücke fiel in der Nacht vom 11. zum 12.3., keine Zeugen; die größte des Jahrhunderts | LN18A, ESWR, ESWG, DC19
+2019 | 1 | 2019-12-28 | 3.5 | | 936 | Geschlossen um den 15.9.2019, Leck ab 20.11., die Brücke fiel gegen 20:15; Dauer vom Leck bis zum Einsturz | LN19, SA19, BAE19, DC19

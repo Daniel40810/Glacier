@@ -1,0 +1,28 @@
+# Glacier · Befunde (F35 A, Werkbuch Abschnitt 2). Je Zeile: THEMA | GEGENSTAND | BEFUND (BELEGT, GEMESSEN, GESTALTET) | TEXT | QUELLEN (Kurzzeichen, Komma)
+GELAENDE | Lage | BELEGT | Nationalpark Los Glaciares, Santa Cruz, Argentinien, 50°30′ S, 73°08′ W; gespeist vom Südlichen Patagonischen Eisfeld. | ENWP
+GELAENDE | Höhen des Geländes | GEMESSEN | Copernicus GLO-30, Ausschnitt 12 × 12 km um die Spitze der Halbinsel Magallanes. | GLO30
+GELAENDE | Seespiegel des Lago Argentino | GEMESSEN | 178,5 m über dem Meer im GLO-30 (geschätzt waren 185 m). | GLO30, MESSUNG_P2
+GELAENDE | Grund unter Wasser und Eis | GESTALTET | Offene Radardaten gibt es nicht; der Grund ist aus Front, Tiefe und Talform modelliert. | 
+GELAENDE | Stege auf der Halbinsel | GEMESSEN | Rundweg auf der Halbinsel Magallanes, rund 300 m vor der Front, 25 bis 60 m über dem See; der Verlauf ist gestaltet. | MESSUNG_P2
+EIS | Absorption im Eis | BELEGT | Licht im Eis nach Beer-Lambert je Farbkanal mit den Werten von reinem Eis: Rot nach wenigen Metern halbiert, Blau erst nach weit über hundert. | WARREN08
+EIS | Blasen, Risse, Moräne | GESTALTET | Firn weiß, Spalten blau, Risse als Zellgrenzen mit Totalreflexion, Moränenbänder längs. | 
+EIS | Festigkeit | GESTALTET | Gletschereis 400 kPa bis 2,5 MPa auf Zug (Phase 7); die Literatur nennt rund 1 MPa. | WIKI_ICE, PETROVIC03
+EIS | Fließen | GESTALTET | An der Front um 2 m je Tag. | ENWP
+FRONT | Größe der Front | BELEGT | 5 km breit, im Mittel rund 74 m über dem Wasser, rund 170 m Eis; der Fuß steht auf Grund. | ENWP
+FRONT | Höhe in der Szene | GEMESSEN | GLO-30 zeigt die Front nur 42 m hoch; sie ist auf 74 m gehoben (Phase 5), 5,2 km lang. | GLO30, MESSUNG_P2
+FRONT | Vorstoß und Rückzug | BELEGT | Vorstoß Juni bis Dezember, Rückzug Dezember bis April; seit 2020 an der Nordfront im Rückzug, 800 m seit 2019. | ENWP, AMB25
+FRONT | Jahresgang in der Szene | GESTALTET | ±40 m um die Front des Geländes: +40 m im Dezember, −40 m im Juni. | 
+FRONT | Spalten, Türme, Kerbe | GESTALTET | Spalten aus der Dehnung, Türme im Eisfall, Schmelzkerbe an der Wasserlinie. | 
+KALBUNG | Häufigkeit | BELEGT | Täglich mehrfach, in allen Größen, am häufigsten im Sommer. | ENWP
+KALBUNG | Statistik der Regie | GESTALTET | Sommer 4 Abbrüche je Stunde, Winter 0,5; welche Säule bricht, entscheidet die Spannung. | 
+KALBUNG | Bruch aus Spannung | GESTALTET | Zellen nach Voronoi, Federnetz nach dem Rigid-Body-Spring-Modell, Riss durch die schwächsten Flächen. | KAWAI
+WELLE | Lauf über den Kanal | GESTALTET | Flachwassergleichungen, bei 100 m Tiefe gut 30 m/s, in rund 20 s über den Kanal; Auflaufen am Steg. | 
+WELLE | Eisberge | GESTALTET | Schwimmen mit 90 % unter Wasser, schmelzen unter Wasser schneller, kentern, wenn der Schwerpunkt wandert. | 
+RUPTURA | Die Jahre | BELEGT | Rupturas 1917 bis 2019, ab 2004 tagesgenau; siehe GLC_RUPTURA. | ESWR, ESWG, ENWP, LN18A
+RUPTURA | Stau und Abfluss | BELEGT | Bis 28,4 m Stau (1966), bis 8 000 m³/s Abfluss (2008). | ESWR, STU07, ENWP
+RUPTURA | Ablauf in der Szene | GESTALTET | Wochen in Minuten: Stau, Sickern, Tunnel, Rinne, Brücke, Einsturz, Abfluss nach Torricelli bis 8 000 m³/s. | 
+LEBEN | Wald und Tiere | BELEGT | Lenga, Ñire, Guindo; Andenkondor, Dominikanermöwe. | ENWP
+LEBEN | Katamaran | GESTALTET | Ausflugsboot vor der Front, hält 300 m Abstand. | 
+HIMMEL | Südhimmel | BELEGT | Sonne über Norden, Kreuz des Südens, Magellansche Wolken; Sommer im Januar. | ENWP
+REGIE | Wetter | GESTALTET | Westwind vom Eisfeld, Föhnsturm, Seenebel am Morgen; Klima Patagoniens. | 
+REGIE | Regiebücher | GESTALTET | Ein Sommertag an der Front, die Ruptura, Südhimmel. | 

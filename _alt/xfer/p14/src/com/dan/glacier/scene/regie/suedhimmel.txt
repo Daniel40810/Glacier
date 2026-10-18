@@ -1,0 +1,28 @@
+# Glacier · Regiebuch (Phase 14), Format wie sommertag.txt. Der 19. Juli 2026: zunehmender Mond (36 %) im Nordwesten
+# über dem Eis, gegen 23:30 sinkt er; im Südwesten das Kreuz des Südens. Mond und Sterne aus com.dan.sky. Gestaltet [G].
+Regiebuch: Südhimmel
+Beschreibung: 19.7.2026, 20:30 bis 23:30 im Zeitraffer 30: eine klare Winternacht, der Mond über dem Eis, das Kreuz des Südens, ein Bruch im Dunkeln
+Länge: 6:01
+0:00 zeit 19.07.2026 20:30 | 20:30: eine klare Winternacht
+0:00 raffer 30
+0:00 wetter_frei KLAR 2 270
+0:00 damm aus
+0:00 kalbung_regie aus
+0:00 figuren an
+0:00 ansicht Vom Steg
+0:40 foto Vom Steg: der Mond über dem Eis
+1:00 ansicht Auf dem Eis | 21 Uhr: Sterne über der Zunge
+1:40 foto Auf dem Eis: Sterne über der Zunge
+2:00 ansicht Vom Berg | 21:30: Kreuz des Südens und Magellansche Wolken
+2:40 foto Vom Berg: der Südhimmel über dem Kanal
+3:00 figuren aus
+3:00 ansicht Vom Steg | 22 Uhr: Stille am Steg
+3:20 kalbung Turm | ein Bruch im Dunkeln, den man nur hört
+3:50 foto Vom Steg: im Dunkeln ist ein Turm gefallen
+4:30 ansicht Unter Wasser | 22:45: unter Wasser im Mondlicht
+4:50 foto Unter Wasser: Mondlicht im Gletschermehl
+5:30 ansicht Vom Steg | 23:15: der Mond sinkt
+5:45 foto Vom Steg: der Mond sinkt hinter das Eisfeld
+6:00 blatt Südhimmel
+6:00 raffer 1
+6:00 sage Südhimmel ist zu Ende
