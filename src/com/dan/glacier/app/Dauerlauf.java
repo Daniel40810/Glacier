@@ -38,7 +38,7 @@ import java.util.Locale;
  * mittleren um höchstens 15 % (im ersten Drittel füllt sich der See erst mit Eisbergen);</li>
  * <li>die Grenzen der Szene halten: höchstens {@code bergs.max} Eisberge und {@code bruch.budget} Stücke (dazu bis 20 frisch
  * gelöste, die jünger als 2 s sind);</li>
- * <li>die Physik kam in mindestens 99 % der Zeit nach.</li>
+ * <li>die Physik rechnete mindestens 99 % der Szenenzeit (gezählt wird die verfallene Zeit, nicht die Hänger des Bilds).</li>
  * </ul>
  * Start: Block TECHNIK → „Dauerlauf“, oder {@code -Dglacier.dauerlauf=Minuten} beim Start. Esc beendet nur das Kino,
  * nicht den Dauerlauf; der endet von selbst.
@@ -92,6 +92,7 @@ public final class Dauerlauf {
     private File lauf() throws Exception {
         int fehler0 = FEHLER.get();
         long nichtNach0 = r.physik.dropped(), schritte0 = r.physik.steps();
+        verloren0 = r.physik.lostSeconds();
         // warten, bis die Szene steht
         for (int i = 0; i < 240 && (r.gletscher() == null || r.kalbung == null || !r.waveReady); i++) Thread.sleep(250);
         List<Regie.Book> buecher = Regie.all();
@@ -130,6 +131,8 @@ public final class Dauerlauf {
         long nichtNach = r.physik.dropped() - nichtNach0, schritte = Math.max(1, r.physik.steps() - schritte0);
         return bericht(FEHLER.get() - fehler0, nichtNach, schritte);
     }
+
+    private double verloren0;
 
     private long messen(long naechste, int fehler0) {
         long jetzt = System.currentTimeMillis();
@@ -185,7 +188,11 @@ public final class Dauerlauf {
         h2 /= Math.max(1, k2);
         h3 /= Math.max(1, k3);
         double wachstum = h2 > 0 ? (h3 - h2) / h2 : 0;
-        double nachAnteil = 1 - nichtNach * Physik_MAX / (double) schritte;
+        // Phase 16: Anteil der Szenenzeit, den die Physik wirklich gerechnet hat (verfallene Zeit gegen gerechnete)
+        double verloren = r.physik.lostSeconds() - verloren0, gerechnet = schritte * com.dan.glacier.scene.Physik.DT;
+        double nachAnteil = gerechnet / (gerechnet + verloren);
+        int haenger = 0;
+        for (Punkt q : p) if (q.minute() > 1 && q.fps() < 20) haenger++;
         List<String[]> urteil = new ArrayList<>();
         urteil.add(new String[]{fehler == 0 ? "ok" : "FEHLER", fehler + " Fehler (Fäden, GL, Chronik)"});
         urteil.add(new String[]{fps >= 30 ? "ok" : "FEHLER", String.format(Locale.GERMAN, "Ø %.1f Bilder/s (geringste %.0f), Grafikkarte Ø %.2f ms", fps, fpsMin == Double.MAX_VALUE ? 0 : fpsMin, gpu)});
@@ -194,7 +201,8 @@ public final class Dauerlauf {
         int bergGrenze = r.bergs.max, stueckGrenze = r.bruch.budget > 0 ? r.bruch.budget + 20 : Integer.MAX_VALUE;
         urteil.add(new String[]{bergMax <= bergGrenze && stueckMax <= stueckGrenze ? "ok" : "FEHLER", String.format(Locale.GERMAN,
                 "höchstens %d Eisberge (Grenze %d), %d Stücke (Grenze %d, %d herausgenommen), %d Fäden", bergMax, bergGrenze, stueckMax, r.bruch.budget, r.bruch.budgetRemoved(), faedenMax)});
-        urteil.add(new String[]{nachAnteil >= 0.99 ? "ok" : "FEHLER", String.format(Locale.GERMAN, "Physik kam in %.2f %% der Zeit nach (%d× nicht)", nachAnteil * 100, nichtNach)});
+        urteil.add(new String[]{nachAnteil >= 0.99 ? "ok" : "FEHLER", String.format(Locale.GERMAN, "Physik rechnete %.2f %% der Zeit (%.1f s verfallen, %d×); Bild unter 20 Bilder/s in %d von %d Messungen",
+                nachAnteil * 100, verloren, nichtNach, haenger, p.size())});
         boolean gut = urteil.stream().allMatch(u -> u[0].equals("ok"));
         String stempel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"));
         File dir = r.photoDir != null ? r.photoDir : new File("docs/status");
@@ -204,6 +212,10 @@ public final class Dauerlauf {
                 .append(" · ").append(r.quality().label).append(" · ").append(r.glInfo()).append('\n');
         for (String[] u : urteil) t.append(String.format("%-7s %s%n", u[0], u[1]));
         t.append(gut ? "ERGEBNIS: Dauerlauf bestanden\n" : "ERGEBNIS: Dauerlauf nicht bestanden\n");
+        // Phase 16: zur Deutung des Speichers (kein Urteil)
+        com.dan.glacier.scene.Ruptura ru = r.ruptura;
+        t.append(String.format(Locale.GERMAN, "info    Bruch: höchstens %d Berührungen je Schritt (Grenze %d, %d Zellpaare weggefallen), Vorrat %d; %d Trümmer von einem neuen Damm überbaut%n",
+                r.bruch.contactPeak(), r.bruch.maxContacts, r.bruch.contactsCapped(), r.bruch.contactPool(), ru == null ? 0 : ru.buried));
         t.append("\nMinute;Bilder/s;Grafikkarte ms;Prozessor ms;Speicher MB;lebend MB;Fäden;Eisberge;Stücke;nicht nachgekommen;Fehler\n");
         for (Punkt q : p)
             t.append(String.format(Locale.GERMAN, "%.2f;%.1f;%.2f;%.2f;%.0f;%.0f;%d;%d;%d;%d;%d%n", q.minute(), q.fps(), q.gpu(), q.cpu(), q.heapMb(), q.lebendMb(), q.faeden(), q.eisberge(), q.stuecke(), q.nichtNach(), q.fehler()));
@@ -215,8 +227,6 @@ public final class Dauerlauf {
         return png;
     }
 
-    /** Wie viele Schritte ein „nicht nachgekommen“ höchstens kostet (Physik.MAX_BEHIND). */
-    private static final int Physik_MAX = com.dan.glacier.scene.Physik.MAX_BEHIND;
 
     private BufferedImage bild(List<Punkt> p, List<String[]> urteil, boolean gut) {
         int w = 1600, h = 900, l = 80, rt = 30, top = 90, bot = 230;

@@ -15,6 +15,8 @@ import java.util.Map;
 final class Contacts {
     static final double MARGIN = 0.02, SLOP = 0.01, BETA = 0.2, MAX_BIAS = 3.0;
     static final int PER_PAIR = 6;
+    /** Glacier Phase 16 (Dauerlauf): Vorrat an Berührungen, der nach einer Spitze stehen bleiben darf. */
+    static final int POOL_KEEP = 8192;
 
     private final Fracture world;
     // die Zellen der haltenden Körper
@@ -32,6 +34,10 @@ final class Contacts {
     private final List<Contact> list = new ArrayList<>();
     private final List<Contact> pool = new ArrayList<>();
     private int used;
+    /** Höchstens so viele Berührungen je Schritt (Fracture.maxContacts); was darüber geht, fällt in diesem Schritt weg. */
+    int max = 40000;
+    private int peak;
+    private long capped;
     private final List<Contact> found = new ArrayList<>();
     private LongMap warm = new LongMap(), next = new LongMap();
     private final double[] t3 = new double[3], s3 = new double[3];
@@ -44,6 +50,17 @@ final class Contacts {
         int size;
 
         void clear() { java.util.Arrays.fill(full, false); size = 0; }
+
+        /** Nach einer Spitze wieder klein (die Tabelle wächst nur, sonst bliebe sie so groß wie die größte Spitze). */
+        void shrinkTo(int need) {
+            int cap = 1024;
+            while (cap < need * 4) cap *= 2;
+            if (keys.length <= cap * 4) return;
+            keys = new long[cap];
+            vals = new double[3 * cap];
+            full = new boolean[cap];
+            size = 0;
+        }
 
         void put(long k, double a, double b, double c) {
             if (size * 2 >= keys.length) grow();
@@ -358,6 +375,13 @@ final class Contacts {
         LongMap sw = warm;
         warm = next;
         next = sw;
+        // Phase 16 (Dauerlauf): nach einer Spitze (ein Damm stürzt ein) den Vorrat wieder freigeben
+        peak = Math.max(peak, list.size());
+        if (pool.size() > 2 * Math.max(used, POOL_KEEP)) {
+            pool.subList(Math.max(used, POOL_KEEP), pool.size()).clear();
+            if (pool instanceof ArrayList<Contact> al) al.trimToSize();
+        }
+        next.shrinkTo(list.size());
         solveMs = solveMs * 0.95 + (System.nanoTime() - tDetect) / 1e6 * 0.05;
     }
 
@@ -545,12 +569,23 @@ final class Contacts {
 
     /** Die tiefsten {@link #PER_PAIR} Berührungen eines Zellpaars behalten. */
     private void keep(List<Contact> found) {
-        if (found.isEmpty()) return;
-        if (found.size() > PER_PAIR) {
+        int n = found.size();
+        if (n == 0) return;
+        // die Berührungen in found sind die letzten n aus dem Vorrat (obtain); verworfene gehen zurück
+        int start = used - n;
+        if (list.size() >= max) { used = start; capped++; return; }
+        if (n > PER_PAIR) {
             found.sort((x, y) -> Double.compare(y.depth, x.depth));
+            for (int q = 0; q < n; q++) pool.set(start + q, found.get(q));
+            used = start + PER_PAIR;
             list.addAll(found.subList(0, PER_PAIR));
         } else list.addAll(found);
     }
+
+    /** Größte Zahl Berührungen in einem Schritt, Zellpaare, die wegen {@link #max} wegfielen, Größe des Vorrats. */
+    int peak() { return peak; }
+    long capped() { return capped; }
+    int poolSize() { return pool.size(); }
 
     private static long key(int a, int ca, int b, int cb, int pt, int dir) {
         long h = a * 0x9E3779B97F4A7C15L;

@@ -119,6 +119,8 @@ public final class Ruptura {
     public int cells = 2600;
     /** Platzhalter neben dem Damm, die nach dem Zerlegen geschmolzen sind. */
     public volatile int dummyCells;
+    /** Phase 16: Trümmer, die ein neuer Damm überbaut hat (seit dem Start). */
+    public volatile int buried;
     /** Die Maske des Brazo Rico (1: Wasser des gestauten Arms), Raster wie das Gelände. */
     private volatile byte[] mask;
     private volatile int maskVersion;
@@ -250,6 +252,12 @@ public final class Ruptura {
         while ((s = ready.poll()) != null) {
             building = false;
             if (!wantDam) continue;
+            // Phase 16 (Dauerlauf): Trümmer des alten Damms, die noch in der Rinne liegen, sind überbaut. Sie blieben
+            // sonst im neuen Körper stecken und drückten sich jeden Schritt mit zehntausenden Berührungen heraus.
+            for (com.dan.fracture.Piece p : world.pieces()) {
+                double[] c = p.position();
+                if (dam.insideXZ(c[0], c[2]) && c[1] < dam.top(c[0], c[2]) + 2) { world.remove(p); buried++; }
+            }
             world.add(s);
             solid = s;
             meltedR = meltedP = -1;

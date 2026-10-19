@@ -106,3 +106,9 @@ Fester Schritt 1/120 s. Gleicher `seed`, gleiche Zellen, gleicher Riss, gleicher
 ## Grenzen für eine App (seit Glacier Phase 16)
 
 `budget` (0 = keine): höchstens so viele Stücke zugleich. Darüber gehen zuerst ruhende Stücke (die am längsten ruhen), dann die kleinsten im Wasser, nie eines, das jünger als 2 s ist; `budgetRemoved()` zählt sie. Zusammen mit `maxPieces` (ab dann zerschellt nichts mehr), `dissolveBelow` und `forgetDryAfter` hält das die Physik in einem festen Rahmen, auch wenn ein ganzer Damm einstürzt.
+
+Seit dem Dauerlauf (Glacier Phase 16) gilt außerdem:
+
+- **`remove(Solid)`:** Ein schlafendes Stück merkt sich, auf welchem Körper es liegt. Geht der Körper, wacht es auf und fällt. Vorher schwebte es weiter und hielt den alten Körper mit allen Zellen im Speicher.
+- **`maxContacts` (Vorgabe 40 000):** höchstens so viele Berührungen je Schritt. Je Zellpaar bleiben die 6 tiefsten; die übrigen gehen sofort zurück in den Vorrat. Nach einer Spitze schrumpfen Vorrat und Tabellen wieder. `contactPeak()`, `contactsCapped()` und `contactPool()` zeigen, wie nah die Szene an der Grenze ist.
+- **Anlass:** Stürzte ein zweiter Damm auf die Trümmer des ersten, stieg die Zahl der Berührungen auf Millionen je Schritt. Der Vorrat wuchs auf über 2 GB und gab nichts mehr her. Glacier nimmt seitdem auch die Trümmer weg, die ein neuer Damm überbaut (`Ruptura.buried`).

@@ -23,12 +23,19 @@ public final class Physik {
     }
 
     public static final double DT = 1.0 / 120;
-    public static final int MAX_BEHIND = 12;
+    /**
+     * Wie viele Schritte höchstens nachgeholt werden. Seit Phase 16 (Dauerlauf) 24 statt 12: Der Bildlauf gibt nach
+     * einem langsamen Bild bis 0,1 s auf einmal weiter; mit 12 Schritten (0,1 s) war der Puffer damit schon voll, und
+     * jeder Hänger des Bilds zählte als Verlust der Physik.
+     */
+    public static final int MAX_BEHIND = 24;
 
     private final List<Aufgabe> aufgaben = new CopyOnWriteArrayList<>();
     private final Object lock = new Object();
     private double pending, t;
     private long steps, dropped;
+    /** Phase 16: Zeit (s), die verfallen ist, weil der Faden nicht nachkam. */
+    private double lost;
     private volatile double stepMs, busy;
     private volatile boolean running;
     private Thread thread;
@@ -47,7 +54,10 @@ public final class Physik {
     /** Vom Bildlauf: dt echte Sekunden sind vergangen (0 bei stehender Szene). */
     public void advance(double dt) {
         synchronized (lock) {
-            pending = Math.min(pending + Math.max(0, dt), DT * MAX_BEHIND);
+            double want = pending + Math.max(0, dt), cap = DT * MAX_BEHIND;
+            // Phase 16: gezählt wird, was wirklich verfällt (vorher zählte jeder Durchlauf mit vollem Puffer)
+            if (want > cap + 1e-9) { lost += want - cap; dropped++; }
+            pending = Math.min(want, cap);
             lock.notifyAll();
         }
     }
@@ -89,7 +99,6 @@ public final class Physik {
             while (running) {
                 boolean go;
                 synchronized (lock) {
-                    if (pending >= DT * MAX_BEHIND) { dropped++; }
                     go = pending >= DT;
                     if (go) pending -= DT;
                     else try { lock.wait(4); } catch (InterruptedException e) { return; }
@@ -123,9 +132,12 @@ public final class Physik {
     /** Phase 16: wie oft die Physik nicht nachkam (für den Dauerlauf). */
     public long dropped() { return dropped; }
 
+    /** Phase 16: verfallene Zeit in Sekunden (die Szene lief so viel langsamer). */
+    public double lostSeconds() { synchronized (lock) { return lost; } }
+
     /** „Physik 1/120 s · 0 Aufgaben · 0,00 ms je Schritt · Faden 0 % belegt“ */
     public String describe() {
         return String.format(Locale.GERMAN, name + " 1/%d s · %d Aufgaben · %.2f ms je Schritt · Faden %.0f %% belegt%s",
-                Math.round(1 / DT), aufgaben.size(), stepMs, busy * 100, dropped > 0 ? " · " + dropped + "× nicht nachgekommen" : "");
+                Math.round(1 / DT), aufgaben.size(), stepMs, busy * 100, dropped > 0 ? String.format(Locale.GERMAN, " · %d× nicht nachgekommen (%.1f s verfallen)", dropped, lost) : "");
     }
 }

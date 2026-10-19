@@ -97,6 +97,12 @@ public final class Fracture {
     /** Wie viele Stücke die Obergrenze {@link #budget} bisher genommen hat. */
     public long budgetRemoved() { return budgetRemoved; }
     public double dissolveBelow = 0;
+    /**
+     * Glacier Phase 16 (Dauerlauf): höchstens so viele Berührungen je Schritt. Darüber fallen weitere Zellpaare in diesem
+     * Schritt weg (die Stücke sinken einen Schritt lang etwas ein). Ohne Grenze wuchs der Vorrat, wenn ein zweiter Damm
+     * auf den Trümmern des ersten einstürzte, auf Millionen Berührungen und blieb so groß.
+     */
+    public int maxContacts = 40000;
     /** Seit Glacier Phase 10: Stücke, die so lange (s) trocken schlafen, sind weg (0: bleiben); sie liegen auf dem Eis und gehen in ihm auf. */
     public double forgetDryAfter = 0;
 
@@ -172,7 +178,22 @@ public final class Fracture {
     /** Einen Körper aus der Welt nehmen (seine Stücke bleiben). */
     public synchronized void remove(Solid s) {
         if (solids.remove(s)) staticDirty = true;
+        forgetRest(s);
         publish();
+    }
+
+    /**
+     * Glacier Phase 16 (Dauerlauf): schlafende Stücke merken sich, worauf sie liegen ({@code Piece.rest}). Geht der Körper,
+     * vergessen sie ihn und wachen auf (sie fallen); sonst hielte jedes Stück, das auf einem alten Damm schläft, den ganzen
+     * Körper mit allen Zellen im Speicher.
+     */
+    private void forgetRest(Solid s) {
+        for (Piece p : pieces) {
+            if (p.rest.isEmpty()) continue;
+            if (p.rest.removeIf(r -> r[0] == s) && p.asleep) p.wake();
+        }
+        // ohne Stücke baut stepPieces die Liste der Zellen nicht neu; dann hielte sie den alten Körper fest
+        if (pieces.isEmpty()) { contacts.rebuildStatic(); staticDirty = false; }
     }
 
     /** Lage eines Stücks zu einem Zeitpunkt: Drehung zeilenweise und Lage. */
@@ -417,6 +438,7 @@ public final class Fracture {
         long tf = System.nanoTime();
         forceMs = forceMs * 0.95 + (tf - tp0) / 1e6 * 0.05;
         // Stöße
+        contacts.max = maxContacts;
         contacts.solve(awake, dt);
         // Lagen
         for (Piece p : awake) {
@@ -664,6 +686,10 @@ public final class Fracture {
     public int shatters() { return shatters; }
     public int breaks() { return breaks; }
     public int contactCount() { return contacts.count(); }
+    /** Phase 16: größte Zahl Berührungen in einem Schritt, Zellpaare über {@link #maxContacts}, Vorrat an Berührungen. */
+    public int contactPeak() { return contacts.peak(); }
+    public long contactsCapped() { return contacts.capped(); }
+    public int contactPool() { return contacts.poolSize(); }
     /** Größte Eindringtiefe (m) beim letzten Schritt zwischen Stücken, gegen Boden und Körper. */
     public double maxPenetration() { return contacts.maxDepth(); }
 

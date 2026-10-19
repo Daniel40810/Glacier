@@ -453,6 +453,13 @@ public final class Pruefung {
         p.advance(0.5);
         int steps = p.drain();
         check(steps == Physik.MAX_BEHIND && n[0] == steps, "Fester Schritt 1/120 s, höchstens " + Physik.MAX_BEHIND + " Schritte nachgeholt (" + steps + ")");
+        // Phase 16: ein langsames Bild (0,1 s auf einmal) kostet nichts; verfallen ist nur, was über den Puffer geht
+        Physik q = new Physik();
+        q.advance(0.1);
+        boolean ohne = q.dropped() == 0 && q.lostSeconds() == 0;
+        q.advance(0.15);
+        check(ohne && q.dropped() == 1 && Math.abs(q.lostSeconds() - (0.25 - Physik.DT * Physik.MAX_BEHIND)) < 1e-9,
+                String.format(Locale.GERMAN, "Ein Hänger des Bilds (0,1 s) verfällt nicht; erst über %.2f s Rückstand verfällt Zeit (%.3f s gezählt)", Physik.DT * Physik.MAX_BEHIND, q.lostSeconds()));
         p.advance(Physik.DT * 3.5);
         check(p.drain() == 3, "3,5 Schritte Zeit → 3 Schritte, der Rest wartet");
         p.add((t, dt) -> { throw new IllegalStateException("Probe"); });
@@ -506,6 +513,27 @@ public final class Pruefung {
         }
         check(uu[0] > 0 && Math.abs(uu[1] / uu[0] - 1) < 1e-6, String.format(Locale.GERMAN, "Spannung im eigenen Faden (asyncSolve): Auslastung %.4f wie im Schritt %.4f", uu[1], uu[0]));
         check(g.pieceCount() == 1 && g.poses().size() == 1 && g.awakeCount() <= 1, "Stücke und Lagen ohne Sperre lesbar (pieceCount, poses)");
+        // Phase 16 (Dauerlauf): ein Block schläft auf einem Körper; geht der Körper, fällt der Block und hält ihn nicht im Speicher
+        {
+            double yb = 0;
+            com.dan.fracture.Fracture h = com.dan.fracture.Fracture.glacier();
+            h.ground = (x, z) -> 0;   // eben bei 0 (Terrain.flat ist an der Stelle See)
+            h.sleepAfter = 0.5;
+            com.dan.fracture.Solid sock = h.addSolid(com.dan.fracture.Shape.box(-3, yb, -3, 3, yb + 4, 3), 30);
+            sock.anchorBelow(yb + 0.5);
+            com.dan.fracture.Piece blk = h.addPiece(com.dan.fracture.Shape.box(-1, 0, -1, 1, 2, 1), 1);
+            blk.place(0, yb + 5.2, 0);
+            for (int i = 0; i < 120 * 8 && !blk.asleep(); i++) h.step(1 / 120.0);
+            boolean slept = blk.asleep();
+            java.lang.ref.WeakReference<Object> ref = new java.lang.ref.WeakReference<>(sock);
+            h.remove(sock);
+            sock = null;
+            boolean woke = !blk.asleep();
+            for (int i = 0; i < 120 * 3; i++) h.step(1 / 120.0);
+            for (int i = 0; i < 4 && ref.get() != null; i++) { System.gc(); try { Thread.sleep(50); } catch (InterruptedException e) { break; } }
+            check(slept && woke && ref.get() == null && blk.position()[1] > yb && blk.position()[1] < yb + 2,
+                    String.format(Locale.GERMAN, "Körper weg: der schlafende Block darauf wacht auf, fällt (%.1f m über Grund) und hält den Körper nicht fest", blk.position()[1] - yb - 1));
+        }
         check(Quality.MITTEL.fracture == com.dan.fracture.Fracture.Quality.MEDIUM && Quality.ULTRA.fracture == com.dan.fracture.Fracture.Quality.ULTRA,
                 "Qualitätsstufen der App reichen bis fracture (Mittel → MEDIUM)");
     }
