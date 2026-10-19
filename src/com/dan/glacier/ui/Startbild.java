@@ -367,7 +367,7 @@ public final class Startbild extends JDialog {
                         countLine.setText(String.format(Locale.GERMAN, "Einrichten %.0f %% · %s", a * 100, t))));
                 merkeEinrichter(r.kurz());
                 Protokoll.info("Einrichter", r.kurz() + " · " + r.ausgefuehrt() + " Anweisungen");
-                for (String z : r.zeilen()) if (!z.startsWith("ok")) Protokoll.warnung("Einrichter", z);
+                for (String z : r.zeilen()) if (!z.startsWith("ok") && !z.contains("alles in Ordnung")) Protokoll.warnung("Einrichter", z);
                 if (r.ok()) speicher = d;
                 String sl = stand(speicher, "");
                 try { letzte = speicher.letzteSitzung(-1); } catch (Exception e) { letzte = null; }

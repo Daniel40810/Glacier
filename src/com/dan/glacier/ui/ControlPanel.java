@@ -1154,7 +1154,7 @@ public final class ControlPanel extends JPanel implements javax.swing.Scrollable
             datenNote = "";
             if (er.ok()) com.dan.store.Dienst.spaeter(com.dan.store.Dienst::neuBeginnen);
             com.dan.store.Protokoll.info("Einrichter", (nurPruefen ? "Prüfen: " : "Einrichten: ") + er.kurz());
-            for (String z : er.zeilen()) if (!z.startsWith("ok")) com.dan.store.Protokoll.warnung("Einrichter", z);
+            for (String z : er.zeilen()) if (!z.startsWith("ok") && !z.contains("alles in Ordnung")) com.dan.store.Protokoll.warnung("Einrichter", z);
             JLabel t = small("<html><body style='width:560px'>" + String.join("<br>", er.zeilen()) + "</body></html>");
             javax.swing.JScrollPane spn = new javax.swing.JScrollPane(t);
             spn.setPreferredSize(new Dimension(640, 420));
