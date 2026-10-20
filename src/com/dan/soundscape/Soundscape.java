@@ -41,13 +41,17 @@ public final class Soundscape {
         KRAEHE, ENTE, ERPEL, SCHWALBE, KORMORAN, SCHWAN, HUHN, HAHN, ZIEGE, SCHWEIN, QUIEKEN, HUND,
         HAMMER, KLOPFEN, BEIL, SAEGE, FEINSAEGE, RUDER, EINSTURZ,
         /** Seit Glacier Phase 12: das Eis und der See ({@link Glacial}). */
-        KNACKEN, AECHZEN, AUFSCHLAG, AUFLAUFEN, KONDOR;
+        KNACKEN, AECHZEN, AUFSCHLAG, AUFLAUFEN, KONDOR,
+        /** Seit Rungholt Phase 14: das Wattenmeer und die Marsch ({@link Wadden}). */
+        AUSTERNFISCHER, ALPENSTRANDLAEUFER, SAEBELSCHNAEBLER, BRANDGANS, LACHMOEWE, RINGELGANS, SCHWARM, SEEHUND, HEULER, RIND, SCHAF, GLOCKE, GLOCKE_WATT;
         /** Ein Ruf eines Tiers (aus {@link Calls})? */
         public boolean animal() { return ordinal() >= KRAEHE.ordinal() && ordinal() <= HUND.ordinal(); }
         /** Ein Klang eines Gewerks oder Schiffs (aus {@link Crafts})? */
         public boolean craft() { return ordinal() >= HAMMER.ordinal() && ordinal() <= EINSTURZ.ordinal(); }
         /** Seit Glacier Phase 12: ein Klang des Eises oder des Sees (aus {@link Glacial})? */
-        public boolean glacial() { return ordinal() >= KNACKEN.ordinal(); }
+        public boolean glacial() { return ordinal() >= KNACKEN.ordinal() && ordinal() <= KONDOR.ordinal(); }
+        /** Seit Rungholt Phase 14: ein Klang des Watts oder der Marsch (aus {@link Wadden})? */
+        public boolean wadden() { return ordinal() >= AUSTERNFISCHER.ordinal(); }
     }
 
     /** Signal mit Effektivwert 1 entspricht so vielen dB SPL. */
@@ -104,6 +108,19 @@ public final class Soundscape {
     /** Wie viel Schilf (0..1) und Reetdach (0..1) in einigen Metern um das Ohr rauscht. */
     public volatile double reedNear, thatchNear;
     /**
+     * Seit Rungholt Phase 14: das Knistern des trocknenden Watts um das Ohr (0..1: Anteil der Fläche in 40 m, die frisch
+     * trockengefallen ist und knistert) [G]: winzige Klicks von 2,5 bis 9 kHz, bei 1 bis 400 je s, 38 dB.
+     */
+    public volatile double mudCrackle;
+    /** Seit Rungholt Phase 14: fließendes Wasser in Prielen ({@link Stream}); die nächsten vier in 600 m klingen. */
+    public final List<Stream> streams = new CopyOnWriteArrayList<>();
+    /**
+     * Seit Rungholt Phase 14: der Wind trägt den Schall (für Ereignisse und Wildwasser ab 50 m): mit dem Wind bis 5 dB
+     * lauter, gegen den Wind im Schallschatten bis 24 dB leiser, nach Windstärke und Abstand; dazu das Schwanken durch
+     * Böen und Wirbel (bis ±6 dB in einigen Sekunden). Aus, wenn false (wie bisher).
+     */
+    public volatile boolean windCarry;
+    /**
      * Zusätzliche Dämpfung über Land (dB je 100 m) durch Häuser, Zäune und Boden; nimmt auch die Höhen mit. 0 auf See
      * (wie bisher), in einer Siedlung um 4.
      */
@@ -149,8 +166,8 @@ public final class Soundscape {
 
     /** Pegel der Teile am Ohr (dB SPL, geglättet): Wind, Äolstöne, See, Brandung, Regen, Glas und Dach, Maschine, Ereignisse, alles. */
     public static final String[] PARTS = {"Wind", "Äolstöne", "See", "Brandung", "Regen", "Glas und Dach", "Maschine",
-            "Feuer", "Reet und Schilf", "Pfähle", "Stimmen", "Ereignisse", "alles"};
-    static final int P_FIRE = 7, P_RUSTLE = 8, P_PILES = 9, P_CROWD = 10, P_EVENTS = 11, P_ALL = 12;
+            "Feuer", "Reet und Schilf", "Pfähle", "Stimmen", "Watt und Priel", "Ereignisse", "alles"};
+    static final int P_FIRE = 7, P_RUSTLE = 8, P_PILES = 9, P_CROWD = 10, P_WATT = 11, P_EVENTS = 12, P_ALL = 13;
     private final double[] energy = new double[PARTS.length];
     private volatile double[] levels = new double[PARTS.length];
     private volatile double reductionDb;
@@ -220,6 +237,9 @@ public final class Soundscape {
             case NEBELHORN -> horn(k, x, y, z, strength, 1.0);
             case TYFON -> horn(k, x, y, z, strength, 6.0);
             case DONNER -> thunder(x, y, z, 70 + 40 * strength, null, null, null, true);
+            case ALPENSTRANDLAEUFER, RINGELGANS -> event(k, x, y, z, strength, 1);
+            case SCHWARM -> event(k, x, y, z, strength, 300);
+            case GLOCKE, GLOCKE_WATT -> event(k, x, y, z, strength, 0);
             default -> event(k, x, y, z, strength, k == Kind.RUDER ? 10 : k == Kind.AUFSCHLAG ? 1000 : 0.5);
         }
     }
@@ -229,10 +249,11 @@ public final class Soundscape {
      * (2 bis 12 klingen), bei der Säge Stoß (über 0,5) oder Zug, beim Hammer der Amboss (0..1).
      */
     public void event(Kind k, double x, double y, double z, double strength, double tone) {
-        if (!k.animal() && !k.craft() && !k.glacial()) { event(k, x, y, z, strength); return; }
+        if (!k.animal() && !k.craft() && !k.glacial() && !k.wadden()) { event(k, x, y, z, strength); return; }
         int sr = sampleRate();
         long sd = nextSeed();
-        Calls.Made m = k.animal() ? Calls.make(k, strength, sd, sr) : k.glacial() ? Glacial.make(k, strength, tone, sd, sr) : Crafts.make(k, strength, tone, sd, sr);
+        Calls.Made m = k.animal() ? Calls.make(k, strength, sd, sr) : k.glacial() ? Glacial.make(k, strength, tone, sd, sr)
+                : k.wadden() ? Wadden.make(k, strength, tone, sd, sr) : Crafts.make(k, strength, tone, sd, sr);
         enqueue(new Voice.Buffered(m.name(), x, y, z, m.level1m(), m.data(), false));
     }
 
@@ -330,6 +351,7 @@ public final class Soundscape {
     // ------------------------------------------------------------------ Rechnen
 
     private void configure() {
+        scintRng = null;
         Quality q = quality;
         sr = q.sampleRate;
         long s = seed;
@@ -356,7 +378,7 @@ public final class Soundscape {
         surfLp.lowpass(1400, 0.6, sr);
         reverb = new Dsp.Reverb(sr, 1.6);
         limiter = new Dsp.Limiter(sr, -1);
-        drops.clear(); ticks.clear(); roof.clear();
+        drops.clear(); ticks.clear(); roof.clear(); crackle.clear();
         voices.clear();
         built = q;
         builtSeed = s;
@@ -416,9 +438,12 @@ public final class Soundscape {
         gust += -gust * dt / 3 + gs * Math.sqrt(2 * dt / 3) * rng.gauss();
         gust = Math.max(-0.8, Math.min(1.5, gust));
         gustAm += -gustAm * dt / 1.2 + 0.25 * Math.sqrt(2 * dt / 1.2) * rng.gauss();
+        if (scintRng == null) scintRng = new Dsp.Rng(seed * 7919 + 14);   // eigene Folge: die übrigen Zufallszahlen bleiben wie vor Phase 14
+        scint += -scint * dt / 2.5 + Math.sqrt(2 * dt / 2.5) * scintRng.gauss();   // Seit Rungholt Phase 14: Schwanken weit getragener Klänge
+        scint = Math.max(-2.5, Math.min(2.5, scint));
 
         // ---------------- Wind: Rauschen
-        double ue = Math.max(0, windAt(ey) * (1 + gust));
+        double ue = Math.max(0, windAt(ey - Math.min(ey - 1, waterLevel)) * (1 + gust));   // seit Rungholt Phase 14: Höhe über Grund oder Wasser (waterLevel), nicht über NHN
         double lw = 22 + 50 * Math.log10(Math.max(0.3, ue));
         float aw = (float) (Dsp.amp(lw) * Math.pow(10, gustAm * 0.15) * 1.6);
         windBp[0].bandpass(120 + 22 * ue, 0.55, sr);
@@ -589,7 +614,7 @@ public final class Soundscape {
             boolean alive = v.render(tmp, off, n, sr);
             if (off == 0 || v.age > 0) { loudestVoice = v.name; lastVoiceAt = time(); }
             double d = Math.max(1, v.atEar ? 1 : v.distance);
-            double gain = Dsp.amp(v.level1m - (v.atEar ? 0 : 20 * Math.log10(d) + obstructionDb(d)));
+            double gain = Dsp.amp(v.level1m - (v.atEar ? 0 : 20 * Math.log10(d) + obstructionDb(d) - carryDb(v.x, v.z, d)));
             float[] g = pan(v.x, v.z, ex, ez, yaw);
             double air = v.atEar ? sr * 0.45 : airHz(d);
             if (!v.atEar && g[2] < 0) air *= 0.6;
@@ -672,6 +697,26 @@ public final class Soundscape {
 
     private final float[] hold = new float[BLOCK];
 
+    private final Pings crackle = new Pings();
+    private double scint;
+    private Dsp.Rng scintRng;
+
+    /**
+     * Seit Rungholt Phase 14: was der Wind am Schall einer Quelle in (x, z) auf d m ändert (dB, + lauter). Mit dem Wind
+     * bis +5 dB, gegen den Wind bis −24 dB (Schallschatten), stärker mit Wind und Abstand; dazu das Schwanken in Böen
+     * [G, nach der Größenordnung aus der Schallausbreitung im Freien]. 0 ohne {@link #windCarry} oder unter 50 m.
+     */
+    public double carryDb(double x, double z, double d) {
+        if (!windCarry || d < 50) return 0;
+        double u = Math.max(0, windSpeed), to = Math.toRadians(windFromDeg + 180);
+        double tx = Math.sin(to), tz = -Math.cos(to), sx = earX - x, sz = earZ - z, l = Math.hypot(sx, sz);
+        if (l < 1e-6) return 0;
+        double cos = (tx * sx + tz * sz) / l, k = u * Math.sqrt(d / 100);
+        double base = cos >= 0 ? Math.min(5, 0.15 * k) * cos : -Math.min(24, 0.6 * k) * (-cos);
+        double sc = Math.min(6, 0.03 * k) * scint;
+        return base + sc;
+    }
+
     /** Zusätzliche Dämpfung über Land auf d m (dB). */
     double obstructionDb(double d) { return Math.max(0, obstruction) * Math.max(0, d - 10) / 100; }
 
@@ -709,9 +754,31 @@ public final class Soundscape {
             double d = Math.max(1, Math.sqrt(sq(tr.x - ex) + sq(tr.y - ey) + sq(tr.z - ez)));
             if (d > 3000) continue;
             float[] g = pan(tr.x, tr.z, ex, ez, yaw);
-            float k = (float) Dsp.amp(REF_DB - obstructionDb(d));
+            float k = (float) Dsp.amp(REF_DB - obstructionDb(d) + carryDb(tr.x, tr.z, d));
             e[2] += tr.render(oL, oR, n, sr, seed, g[0] * k, g[1] * k, d, airHz(d));
         }
+        // Seit Rungholt Phase 14: Priele (die nächsten vier in 600 m)
+        int sn = 0;
+        Stream[] near = new Stream[4];
+        double[] nd = new double[4];
+        for (Stream st : streams) {
+            double d = Math.sqrt(sq(st.x - ex) + sq(st.y - ey) + sq(st.z - ez));
+            if (d > 600 || st.speed < 0.03) continue;
+            if (sn < 4) { near[sn] = st; nd[sn++] = d; continue; }
+            int w = 0;
+            for (int k2 = 1; k2 < 4; k2++) if (nd[k2] > nd[w]) w = k2;
+            if (d < nd[w]) { near[w] = st; nd[w] = d; }
+        }
+        for (int k2 = 0; k2 < sn; k2++) {
+            double d = Math.max(1, nd[k2]);
+            float[] g = pan(near[k2].x, near[k2].z, ex, ez, yaw);
+            float k = (float) Dsp.amp(REF_DB - obstructionDb(d));
+            e[P_WATT] += near[k2].render(oL, oR, n, sr, seed, g[0] * k, g[1] * k, d, airHz(d));
+        }
+        // Seit Rungholt Phase 14: das Knistern des Watts (Schlickkrebse, Luft, die aus dem Sand perlt)
+        double mc = Math.max(0, Math.min(1, mudCrackle));
+        if (mc > 0.005) crackle.spawn(Math.min(built.drops * 4, 1 + 400 * mc), dt, 2500, Math.min(9000, sr * 0.42), 0.0003, 0.0012, Dsp.amp(38 + 6 * mc) * 2.4, 1.0, rng, sr);
+        e[P_WATT] += crackle.render(oL, oR, n, sr);
         // Mengen
         for (Crowd cr : crowds) {
             double people = cr.people;

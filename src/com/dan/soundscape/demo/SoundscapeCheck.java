@@ -268,6 +268,7 @@ public final class SoundscapeCheck {
         check(q && ms < 120, f("Stufen von 22 bis 48 kHz; Sturm mit drei Äolskörpern, Brandung, Regen auf Glas und Dach: %.0f ms Rechnen je s Ton", ms));
 
         glacier(sr);
+        wadden(sr);
         lines.add(bad == 0 ? "Alles in Ordnung." : bad + " Prüfungen fehlgeschlagen.");
         return lines;
     }
@@ -592,4 +593,68 @@ public final class SoundscapeCheck {
             double cc = q.soundSpeed(), on = Analysis.onset(o, sr, 0, Dsp.amp(40));
             check(Math.abs(on - 400 / cc) < 0.08, f("Donner der Kalbung aus 400 m: kommt nach %.2f s (Laufzeit %.2f s), %.0f dB am Ohr", on, 400 / cc, db(Analysis.rms(o, sr, on, 0.5))));
             }
+
+    /** Seit Rungholt Phase 14: das Watt (Vögel, Seehunde, Priel, Knistern), Vieh und Glocken, der Wind, der den Schall trägt. */
+    private void wadden(int sr) {
+        Soundscape.Kind[] ks = {Soundscape.Kind.AUSTERNFISCHER, Soundscape.Kind.ALPENSTRANDLAEUFER, Soundscape.Kind.RINGELGANS, Soundscape.Kind.SEEHUND,
+                Soundscape.Kind.HEULER, Soundscape.Kind.RIND, Soundscape.Kind.SCHAF, Soundscape.Kind.GLOCKE, Soundscape.Kind.GLOCKE_WATT};
+        double[] tone = {0.5, 6, 8, 0.5, 0.5, 0.5, 0.5, 0, 0};
+        double[] cen = new double[ks.length], lev = new double[ks.length], tail = new double[ks.length];
+        double[][] spec = new double[ks.length][];
+        for (int k = 0; k < ks.length; k++) {
+            Soundscape q = quiet();
+            q.event(ks[k], 0, 2, -10, 1, tone[k]);
+            float[] o = q.render(9);
+            double on = Analysis.onset(o, sr, 0, Dsp.amp(10));
+            if (Double.isNaN(on)) on = 0;
+            spec[k] = Analysis.spectrum(Analysis.mono(o, sr, on, 1.5), 16384);
+            cen[k] = Analysis.centroid(spec[k], sr, 16384);
+            double best = 0;
+            for (double t = on; t < 8.8; t += 0.02) best = Math.max(best, Analysis.rms(o, sr, t, 0.1));
+            lev[k] = db(best) + 20;   // in 10 m gemessen, auf 1 m gerechnet
+            tail[k] = db(Analysis.rms(o, sr, on + 3, 1)) - db(best);
+        }
+        check(cen[0] > 1800 && lev[0] > 90 && lev[0] < 106, f("Austernfischer: hell (Schwerpunkt %.0f Hz), laut %.0f dB in 1 m", cen[0], lev[0]));
+        check(cen[1] > 2500 && lev[1] < lev[0], f("Alpenstrandläufer im Trupp: dünn und hoch (%.0f Hz), %.0f dB in 1 m", cen[1], lev[1]));
+        check(cen[2] < cen[1] && lev[2] > 80, f("Ringelgänse murmeln tiefer (%.0f Hz), %.0f dB in 1 m", cen[2], lev[2]));
+        check(cen[3] < 1500 && cen[4] > cen[3], f("Seehund tief (%.0f Hz), der Heuler höher (%.0f Hz)", cen[3], cen[4]));
+        check(cen[5] < 800 && lev[5] > lev[6], f("Rind tief und laut (%.0f Hz, %.0f dB), Schaf leiser (%.0f dB)", cen[5], lev[5], lev[6]));
+        double prime = Analysis.peak(spec[7], sr, 16384, 280, 345);
+        check(Math.abs(prime - 311) < 6 && lev[7] > 110 && tail[7] > -40, f("Glocke: Prime %.0f Hz, %.0f dB in 1 m, nach 3 s noch %.0f dB unter der Spitze", prime, lev[7], -tail[7]));
+        check(cen[8] < cen[7] * 0.85, f("Glocken aus dem Watt: dumpf wie unter Wasser (Schwerpunkt %.0f Hz gegen %.0f Hz)", cen[8], cen[7]));
+        // der Priel: lauter und heller mit der Strömung
+        double[] pl = new double[2], pc = new double[2];
+        double[] v = {0.25, 1.0};
+        for (int k = 0; k < 2; k++) {
+            Soundscape q = quiet();
+            com.dan.soundscape.Stream st = new com.dan.soundscape.Stream("Priel");
+            st.x = 0; st.y = 0; st.z = -8; st.speed = v[k]; st.width = 30;
+            q.streams.add(st);
+            q.render(1);
+            float[] o = q.render(4);
+            pl[k] = db(Analysis.rms(o, sr, 0, 4));
+            pc[k] = Analysis.centroid(Analysis.spectrum(Analysis.mono(o, sr, 0, 4), 8192), sr, 8192);
+        }
+        check(pl[1] - pl[0] > 10 && pc[1] > pc[0] && Math.abs(com.dan.soundscape.Stream.levelDb(1, 30) - 61) < 1,
+                f("Priel: bei 1 m/s %.0f dB lauter als bei 0,25 m/s, heller (%.0f gegen %.0f Hz); 30 m breit bei 1 m/s %.0f dB in 1 m", pl[1] - pl[0], pc[1], pc[0], com.dan.soundscape.Stream.levelDb(1, 30)));
+        // Knistern des trockenfallenden Watts: kurze helle Knackse
+        Soundscape q0 = quiet(), q1 = quiet();
+        q1.mudCrackle = 1;
+        q0.render(1); q1.render(1);
+        float[] o0 = q0.render(4), o1 = q1.render(4);
+        int clicks = countClicks(o1, sr);
+        double hi = band(Analysis.spectrum(Analysis.mono(o1, sr, 0, 4), 8192), sr, 8192, 2000, 8000);
+        check(clicks > 25 && db(Analysis.rms(o1, sr, 0, 4)) > db(Analysis.rms(o0, sr, 0, 4)) + 10 && hi > 0,
+                f("Knistern im Watt: %d Knackse in 4 s, %.0f dB am Ohr (ohne: %.0f dB)", clicks, db(Analysis.rms(o1, sr, 0, 4)), db(Analysis.rms(o0, sr, 0, 4))));
+        // der Wind trägt den Schall: mit dem Wind lauter, gegen den Wind im Schallschatten
+        Soundscape c = quiet();
+        c.windCarry = true;
+        c.windSpeed = 20;
+        c.windFromDeg = 270;
+        double with = c.carryDb(-2000, 0, 2000), against = c.carryDb(2000, 0, 2000), near = c.carryDb(-30, 0, 30);
+        c.windCarry = false;
+        double off = c.carryDb(-2000, 0, 2000);
+        check(with > 2 && with <= 11 && against < -14 && near == 0 && off == 0,
+                f("Wind aus West 20 m/s, Quelle 2 km entfernt: mit dem Wind %+.0f dB, gegen den Wind %+.0f dB, in 30 m und ohne Windtragen 0", with, against));
+    }
 }

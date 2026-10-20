@@ -13,7 +13,7 @@ Zum Herauskopieren reicht `src/com/dan/ground/`. Nur `demo/MeadowDemo` braucht z
   - dazu Kiesel, Steine und offene Erde
 
   Alle Werte sind öffentlich und lassen sich ändern.
-- **Biome:** `Biome.yellowstone()`, `europe()`, `gravelBar()` und `schlei()` mischen die Arten mit Dichten je Quadratmeter. Jede Art zieht ihre Dichte aus einer von vier Schichten: Gras, Blumen, Steine, Erde. Manche Arten mögen es feucht, etwa Seggen, andere trocken, etwa die Balsamwurzel.
+- **Biome:** `Biome.yellowstone()`, `europe()`, `gravelBar()`, `schlei()` und `deich()` mischen die Arten mit Dichten je Quadratmeter. Jede Art zieht ihre Dichte aus einer von vier Schichten: Gras, Blumen, Steine, Erde. Manche Arten mögen es feucht, etwa Seggen, andere trocken, etwa die Balsamwurzel.
 - **Standort:** Über die Schnittstelle `Site` sagt man, wie hoch der Boden ist und wie dicht jede Schicht dort ist. So legt man Pfade, Blumeninseln, Geröllfelder, Ufer oder heiße Stellen ohne Bewuchs fest.
 - **Wind:** Böen laufen als Wellen über die Wiese. Die Halme biegen sich nach Höhe und Steifheit und zittern, die Blüten nicken, die Wurzeln bleiben am Ort.
 - **Niedertreten:** Gehende (`pushers`) drücken das Gras zur Seite. Es richtet sich in einigen Sekunden wieder auf, dadurch entstehen sichtbare Spuren.
@@ -76,3 +76,17 @@ Halme und Blüten sind dünn (`solid = 0`) und werden von beiden Seiten beleucht
 unter Südbuchen und am offenen Hang: Laubstreu, Seggen, Horstgras in Flecken, Steine; im Uferstreifen Kiesel [G].
 Die Bedeckung je Stelle liefert die App über `ground.Site.cover` (Glacier: `scene.Bodendecke` aus der Vegetation).
 Rückfluss in Phase 16.
+
+## Seit Rungholt Phase 3: Deich an der Nordsee
+
+`Biome.deich()` – kurz geweidetes Deichgras, Seggen in feuchten Senken, wenig Löwenzahn und Margeriten, kaum Steine
+(Marschboden). Gut halb so dicht wie `europe()`, damit die Bodendecke auf dem Prozessor billig bleibt (Befund Rungholt
+Status_Phase2: 8,3 ms mit der Blumenwiese auf 24 m). `GroundCheck` prüft: höchstens halb so viele Dreiecke wie die
+Blumenwiese.
+
+## Seit Rungholt Phase 10: Salzwiese und Marsch
+
+`Biome.salzwiese()` – Andel, Queller und Strandaster auf nassem Klei; `Biome.marsch()` – Weidegras mit Weißklee und
+Hahnenfuß auf Klei, für die Marsch hinter dem Deich von 1362. Neue Pflanzen in `Plant`: `queller()`, `andel()`,
+`strandaster()`, `whiteClover()`, `buttercup()`, `klei()` (offener Kleiboden). `deich()` hat am Fuß jetzt Andel, Queller
+und Strandaster.

@@ -136,6 +136,21 @@ public final class GroundCheck {
         check("Schlei: Adlerfarn im Oktober schon braun, Schafgarbe blüht noch, im Januar nicht", fern != null && yarrow != null && 289 > fern.dryStart
                 && msl.bloom(yarrow, 289) > 0 && msl.bloom(yarrow, 20) == 0, "");
 
+        // Deich an der Nordsee (seit Rungholt Phase 3): weniger als halb so viele Dreiecke wie die Blumenwiese, und schneller
+        Meadow me = new Meadow(Biome.europe(), Site.MEADOW), md = new Meadow(Biome.deich(), Site.MEADOW);
+        me.setSeason(200, 0);
+        md.setSeason(200, 0);
+        me.update(0, 0, 0);
+        md.update(0, 0, 0);
+        long te = System.nanoTime();
+        for (int k = 1; k <= 10; k++) me.update(k / 30f, 0, 0);
+        double msE = (System.nanoTime() - te) / 1e6 / 10;
+        long td = System.nanoTime();
+        for (int k = 1; k <= 10; k++) md.update(k / 30f, 0, 0);
+        double msD = (System.nanoTime() - td) / 1e6 / 10;
+        check("Deich: höchstens halb so viele Dreiecke wie die Blumenwiese (" + md.batch.nt + " zu " + me.batch.nt + ")",
+                md.batch.nt > 0 && md.batch.nt * 2 <= me.batch.nt, String.format(java.util.Locale.GERMANY, "%.1f zu %.1f ms", msD, msE));
+
         System.out.println(bad == 0 ? "Alles in Ordnung." : bad + " von " + all + " Prüfungen fehlgeschlagen.");
         if (bad > 0) System.exit(1);
     }

@@ -84,6 +84,25 @@ public final class Material {
         return m;
     }
 
+    /**
+     * Seit Rungholt Phase 12: Klei eines mittelalterlichen Seedeichs, nass [G]: 1 900 kg/m³, E 30 MPa, Zug 15 kPa, Druck
+     * 150 kPa, φ 25° (steifer, toniger Marschboden; die Werte liegen im Bereich undrainierter Scherfestigkeiten von
+     * 20 bis 75 kPa, der Zug als kleiner Teil davon). Schwach wird er durch Erosion, nicht durch Spannung allein.
+     */
+    public static Material klei() {
+        Material m = new Material();
+        m.name = "Klei";
+        m.density = 1900;
+        m.young = 3.0e7;
+        m.tensile = 1.5e4;
+        m.compressive = 1.5e5;
+        m.frictionAngle = 25;
+        m.scatter = 0.3;
+        m.friction = 0.6;
+        m.restitution = 0.05;
+        return m;
+    }
+
     /** Beton einer Staumauer: 2 400 kg/m³, E 30 GPa, Zug 3 MPa, Druck 30 MPa, φ 37° [G]. */
     public static Material concrete() {
         Material m = new Material();

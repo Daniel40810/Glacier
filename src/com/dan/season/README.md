@@ -32,6 +32,11 @@ Zum Herauskopieren reicht `src/com/dan/season/`; nur `demo/SeasonDemo` braucht z
 - `gl/IceGl.Input.clip`: Eis nur in einem Rechteck (etwa einem Seearm).
 - Prüfung (`SeasonCheck`): El Calafate wie das SMN, vor dem Perito Moreno in 30 Jahren am 16. Juli 6-mal Schnee am Ufer und 17-mal Eis, am 16. Januar nie; Herbstfärbung im April.
 
+## Nordfriesland (seit Rungholt Phase 9)
+
+- `Climate.nordfriesland()`: die Küste bei Husum (DWD 1991–2020 gerundet [G]: Januar 1,5 °C, Juli 17,3 °C, rund 870 mm, der meiste Regen von August bis Dezember). Mit Startwert 26 hat der Januar 2026 einen Wintereinbruch: am 21. liegen 17 cm Schnee.
+- In Rungholt hängt `Year` an der Verdrahtung (`Wiring.Jahreszeit`): Schnee und Reif auf dem Land und den höchsten trockenen Watten, Queller im Herbst rot, Salzwiese im Winter braungrau, Halme und Bodendecke nach Tag und Schnee, Dachschnee auf dem Friesenhaus, `SnowfallGl` unter 2,5 °C; die Abweichung des gewürfelten Tags geht an die Wetterregie (`weather.anomaly`).
+
 ## Benutzung
 
 ```java

@@ -30,6 +30,12 @@ Alles, was auf dem Wasser schwimmt: Leuchttonnen an einem Fahrwasser und gelegen
 - **`BuoyancyGl.drawMeshes`:** beliebige Netze mit Modellmatrix (oder in Weltkoordinaten), einmal hochgeladen; `forget` gibt eines frei.
 - **`Berg.topVertex()`, `Berg.vertexWorld(i)`:** die höchste Ecke eines Bergs in der Welt (für Möwen, die auf ihm sitzen).
 
+## Kogge (seit Rungholt Phase 11)
+
+- **`Cog`**: eine Kogge wie die Bremer Kogge von 1380: 23,3 × 7,6 m, 2,25 m Tiefgang, Schwerpunkt auf der Wasserlinie (Ballast), GM 0,7 m; Säulen in drei Reihen über die Breite. Fährt eine Route (`via`, `start`, `go` für die Rückfahrt ab dem jetzigen Ort), langsam zum letzten Punkt, Segel 0..1 folgt der Fahrt in 20 s. **Trockenfallen**: liegt der Grund (`Sea.bed`) über dem Kiel, sitzt sie aufrecht auf ihrem flachen Boden, bis das Wasser sie wieder trägt (`grounded()`, `underKeel`).
+- **`Mesh.cog(c, segel)`**: geklinkerter Rumpf mit flachem Boden und Sprung, geneigter Vordersteven, Ruder, Achterkastell mit Brüstung, Mast mit Mars, Rah, Wanten und Vorstag; das Segel an der Rah aufgetucht oder gesetzt mit Bauch, rot-weiß gestreift [G].
+- `BuoyancyCheck` prüft: schwimmt auf der Konstruktionswasserlinie, fällt bei Ebbe aufrecht trocken, schwimmt mit der Flut wieder auf, fährt zwei Wegpunkte ab und tucht das Segel am Ziel auf.
+
 ## Benutzung
 
 ```java

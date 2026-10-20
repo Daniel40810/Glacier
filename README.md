@@ -42,6 +42,21 @@ Jedes Package folgt demselben Vertrag: Der Kern braucht nur Java 21, `gl/` dazu 
 
 Abgestellt in `_alt/packages/` (F6 A): `timber`, `smoke`, `hearth`, `herd`, `longship`, `road`, `muster`.
 
+## Rückfluss aus Rungholt
+
+Mit Rungholt (Phase 17, 20.10.2026) kamen die Erweiterungen der gemeinsamen Packages zurück. Alle sind Zusätze oder abschaltbar und stehen auf den alten Vorgaben; Glacier übersetzt ohne Änderung an der App:
+
+- `weather`: der Orkan aus Westnordwest (`Phase.ORKAN`), den die Standardkette nicht erreicht. Die Prüfung der CHECK-Regeln lässt ihn aus, weil Glacier ihn nicht nutzt.
+- `ocean`: Strömung als Textur, weicher Rand der langen Welle, Grund außerhalb des Rechtecks, gegen das Kachelmuster. Die lange Welle zählt die Tiefe jetzt unter ihrem eigenen Spiegel; die Fläche taucht am trockenen Rand 1 m unter den Grund statt um die Tiefe.
+- `wave`: das Halten der Ränder (`Hold`) und der Dammbruch einer Bresche.
+- `fracture`: Klei als Material (`Fracture.klei()`).
+- `flock`: die Wattvögel (`Waders`) neben Möwen und Kondor.
+- `buoyancy`: die Kogge, `Mesh` mit mehr Formen.
+- `ground`: Deich, Salzwiese und Marsch der Nordsee.
+- `season`: das Klima Nordfrieslands, milde Nächte (`mild`).
+- `soundscape`: Watt, Priel und Sturmnacht (`Wadden`, `Stream`).
+- `kino`: nur die README.
+
 ## Bauen und starten
 
 - **Projekt:** NetBeans mit Ant und JDK 21. In `lib/` liegen JOGL mit Windows-Natives, `FStyle.jar`, `ojdbc11.jar` und `sdo*.jar`.

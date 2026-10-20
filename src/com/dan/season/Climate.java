@@ -39,6 +39,17 @@ public final class Climate {
     }
 
     /**
+     * Seit Rungholt Phase 9: Nordfriesland an der Küste bei Husum (DWD-Mittel 1991–2020 gerundet [G]): Januar 1,5 °C,
+     * Juli 17,3 °C, rund 870 mm im Jahr, der meiste Regen im Spätsommer und Herbst; milder als im Binnenland, die
+     * Nordsee hält den Herbst warm.
+     */
+    public static Climate nordfriesland() {
+        return new Climate(new double[]{1.5, 1.8, 4.0, 7.8, 11.8, 15.0, 17.3, 17.2, 14.3, 10.4, 6.0, 2.9},
+                new double[]{76, 56, 56, 38, 50, 68, 80, 90, 86, 92, 88, 84},
+                new double[]{17, 14, 14, 10, 11, 12, 13, 14, 15, 17, 18, 18});
+    }
+
+    /**
      * Seit Glacier Phase 10/11: El Calafate am Lago Argentino (Servicio Meteorológico Nacional, Mittel 1991–2020):
      * Januar 13,9 °C, Juli 0,6 °C, im Jahr nur 161 mm an 43 Tagen (Regenschatten der Anden).
      */

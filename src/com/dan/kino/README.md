@@ -1,6 +1,6 @@
 # com.dan.kino – der Kinomodus
 
-**Stand: Glacier Phase 16.** Neu in Glacier, gebaut zum Herauskopieren nach Haithabu, Lighthouse und jede weitere Szene mit Regiebüchern.
+**Stand: Glacier Phase 16.** Neu in Glacier, gebaut zum Herauskopieren nach Haithabu, Lighthouse und jede weitere Szene mit Regiebüchern. Seit Rungholt Phase 15 unverändert in Rungholt (drei Regiebücher, Titel „Rungholt · Zweimal am Tag Land“; wartet das Regiebuch im Vorspann, ruft die App `schritt(0)`, damit die Titeltafel stehen bleibt).
 
 Ein Regiebuch (Drehbuch) läuft wie im Kino: ganzer Bildschirm ohne Bedienfeld und HUD, Breitwand mit Balken, Vorspann und Abspann, Untertitel aus den Stichworten, Überblendung bei jedem Schnitt, eine ruhige Kamera, die nie ganz stillsteht, Filmkorn, und der Ton blendet mit dem Bild. Das Package kennt keine Szene. Es sagt der App jedes Bild, was über dem fertigen Bild liegen soll, und malt es auf Wunsch auch selbst.
 

@@ -203,6 +203,102 @@ public final class Mesh {
         return m;
     }
 
+    /**
+     * Seit Rungholt Phase 11: die Kogge. Geklinkerter Rumpf mit flachem Boden, Sprung zu den Steven, geraden Steven
+     * (der vordere stark geneigt), Achterkastell, Mast mit Rah; das Segel aufgetucht an der Rah (sail = 0) oder gesetzt
+     * (1, mit Bauch nach vorn, rot-weiß gestreift [G]); Ruder am Achtersteven. Wasserlinie bei y = 0.
+     */
+    public static Mesh cog(Cog c, double sail) {
+        Mesh m = new Mesh();
+        double L = c.length, B = c.beam, T = c.draftDesign, F = c.freeboard;
+        double[] hull = {0.075, 0.048, 0.03}, tar = {0.03, 0.022, 0.016}, wood = {0.16, 0.11, 0.065}, deck = {0.20, 0.15, 0.10},
+                cloth = {0.62, 0.56, 0.46}, red = {0.40, 0.06, 0.04}, rope = {0.10, 0.08, 0.05};
+        int ns = 28;
+        double[][] prev = null;
+        double shift = 0;
+        for (int i = 0; i <= ns; i++) {
+            double s = -L / 2 + L * i / ns, u = s / (L / 2);
+            double w = halfOuter(u, B), t = T * (1 - 0.35 * Math.pow(Math.abs(u), 3)), top = F + 1.1 * u * u * (u > 0 ? 1.1 : 0.9);
+            double wb = w * 0.6;
+            // Schnitt von Steuerbord oben über den flachen Boden nach Backbord oben (Modell: x Steuerbord, z achteraus)
+            double[][] sec = {{w * 1.04, top, -s}, {w, 0.6 * top, -s}, {w * 0.97, 0, -s}, {w * 0.85, -t * 0.6, -s}, {wb, -t, -s}, {-wb, -t, -s},
+                    {-w * 0.85, -t * 0.6, -s}, {-w * 0.97, 0, -s}, {-w, 0.6 * top, -s}, {-w * 1.04, top, -s}};
+            if (prev != null)
+                for (int k = 0; k + 1 < sec.length; k++) {
+                    double[] col = k >= 2 && k <= 6 ? tar : ((k + i / 3) % 2 == 0 ? hull : wood);   // Plankengänge abwechselnd
+                    m.quad(prev[k + 1], sec[k + 1], sec[k], prev[k], col, PAINT);
+                }
+            // Deck 0,9 m unter dem Schanzkleid, Schanzkleid innen
+            if (prev != null) {
+                double dy = -0.9;
+                double[] a = {prev[0][0] * 0.94, prev[0][1] + dy, prev[0][2]}, b = {sec[0][0] * 0.94, sec[0][1] + dy, sec[0][2]},
+                        cc = {sec[9][0] * 0.94, sec[9][1] + dy, sec[9][2]}, d = {prev[9][0] * 0.94, prev[9][1] + dy, prev[9][2]};
+                m.quad(a, b, cc, d, deck, PAINT);
+                double[] ai = {prev[0][0] * 0.94, prev[0][1], prev[0][2]}, bi = {sec[0][0] * 0.94, sec[0][1], sec[0][2]};
+                m.quad(ai, bi, b, a, wood, PAINT);
+                double[] ci = {sec[9][0] * 0.94, sec[9][1], sec[9][2]}, di = {prev[9][0] * 0.94, prev[9][1], prev[9][2]};
+                m.quad(ci, di, d, cc, wood, PAINT);
+                // Oberkante des Schanzkleids
+                m.quad(prev[0], sec[0], bi, ai, wood, PAINT);
+                m.quad(ci, sec[9], prev[9], di, wood, PAINT);
+            }
+            prev = sec;
+            shift = top;
+        }
+        // Steven: vorn stark geneigt, achtern steil; Ruder am Achtersteven
+        double bowTop = F + 1.2 * 1.1, sternTop = F + 1.0;
+        m.beam(p(0, -T * 0.7, -L / 2 + 0.3), p(0, bowTop + 0.6, -L / 2 - 2.2), 0.35, 0.35, wood, PAINT);
+        m.beam(p(0, -T * 0.7, L / 2 - 0.3), p(0, sternTop + 0.4, L / 2 + 0.6), 0.35, 0.35, wood, PAINT);
+        m.box(0, (sternTop - T * 0.8) / 2, L / 2 + 0.9, 0.12, (sternTop + T * 0.8) / 2, 0.75, wood, PAINT);
+        // Achterkastell: Plattform auf Pfosten mit Brüstung
+        double cz0 = L / 2 - 7.0, cz1 = L / 2 - 0.4, cy = sternTop + 1.9, cw = halfOuter(-0.8, B) * 0.98;
+        m.box(0, cy, (cz0 + cz1) / 2, cw, 0.12, (cz1 - cz0) / 2, deck, PAINT);
+        m.box(cw - 0.05, cy + 0.55, (cz0 + cz1) / 2, 0.05, 0.45, (cz1 - cz0) / 2, wood, PAINT);
+        m.box(-cw + 0.05, cy + 0.55, (cz0 + cz1) / 2, 0.05, 0.45, (cz1 - cz0) / 2, wood, PAINT);
+        m.box(0, cy + 0.55, cz1 - 0.05, cw, 0.45, 0.05, wood, PAINT);
+        m.box(0, cy + 0.55, cz0 + 0.05, cw, 0.45, 0.05, wood, PAINT);
+        m.box(0, (cy + F - 0.9) / 2, cz0 + 0.3, cw * 0.9, (cy - F + 0.9) / 2, 0.08, wood, PAINT);   // Schott unter dem Kastell
+        for (int k = -1; k <= 1; k += 2) m.beam(p(k * (cw - 0.3), F - 0.9, cz0 + 0.2), p(k * (cw - 0.3), cy, cz0 + 0.2), 0.25, 0.25, wood, PAINT);
+        // Mast, Rah, Wanten
+        double mz = -1.2, mh = c.mastHeight, yard = mh - 3.5;
+        m.cylinder(0, mz, 0.32, 0.18, F - 1.0, mh, 8, new double[][]{wood}, PAINT, true);
+        m.beam(p(-7.2, yard, mz - 0.35), p(7.2, yard, mz - 0.35), 0.22, 0.22, wood, PAINT);
+        m.box(0, mh - 1.0, mz, 0.55, 0.45, 0.55, wood, PAINT);   // Mars (Ausguck)
+        for (int k = -1; k <= 1; k += 2)
+            for (int j = 0; j < 3; j++) {
+                double sz = mz + 1.2 + j * 1.3;
+                m.beam(p(k * halfOuter(-0.1, B) * 1.02, F + 0.1, sz), p(k * 0.25, mh - 2.0, mz), 0.04, 0.04, rope, PAINT);
+            }
+        m.beam(p(0, mh - 1.8, mz), p(0, bowTop + 0.5, -L / 2 - 2.0), 0.05, 0.05, rope, PAINT);   // Vorstag
+        // Segel
+        double sw = 13, sh = 11.5;
+        if (sail < 0.05) {
+            m.beam(p(-6.5, yard - 0.42, mz - 0.6), p(6.5, yard - 0.42, mz - 0.6), 0.55, 0.45, cloth, PAINT);
+        } else {
+            double hgt = sh * Math.min(1, sail), belly = 1.4 * sail;
+            int nu = 10, nv = 8;
+            for (int a = 0; a < nu; a++)
+                for (int b = 0; b < nv; b++) {
+                    double[] p00 = sailPoint(a, b, nu, nv, sw, hgt, yard, mz, belly), p10 = sailPoint(a + 1, b, nu, nv, sw, hgt, yard, mz, belly),
+                            p11 = sailPoint(a + 1, b + 1, nu, nv, sw, hgt, yard, mz, belly), p01 = sailPoint(a, b + 1, nu, nv, sw, hgt, yard, mz, belly);
+                    double[] col = (a / 2) % 2 == 0 ? cloth : red;
+                    m.quad(p00, p10, p11, p01, col, PAINT);   // vorn
+                    m.quad(p01, p11, p10, p00, col, PAINT);   // hinten
+                }
+        }
+        return m;
+    }
+
+    /** Ein Punkt des gesetzten Segels: a quer, b von der Rah nach unten; Bauch nach vorn (−z). */
+    private static double[] sailPoint(int a, int b, int nu, int nv, double sw, double hgt, double yard, double mz, double belly) {
+        double fu = a / (double) nu, fv = b / (double) nv;
+        double bulge = belly * Math.sin(Math.PI * fu) * Math.sin(Math.PI * Math.min(1, fv * 0.9 + 0.1));
+        return p(-sw / 2 + sw * fu, yard - 0.4 - hgt * fv, mz - 0.6 - bulge);
+    }
+
+    /** Halbe Breite des Rumpfs außen an der Stelle u (−1 achtern … 1 vorn). */
+    static double halfOuter(double u, double B) { return Cog.halfBeam(u, B) * 1.03; }
+
     // ------------------------------------------------------------------ Farben (linear)
     static final double[] RED = {0.42, 0.03, 0.02}, GREEN = {0.02, 0.22, 0.06}, WHITE = {0.72, 0.72, 0.7}, BLACK = {0.03, 0.03, 0.035},
             YELLOW = {0.65, 0.42, 0.02}, GREY = {0.18, 0.19, 0.2}, DARK = {0.06, 0.065, 0.07}, ANTIFOUL = {0.22, 0.045, 0.03},

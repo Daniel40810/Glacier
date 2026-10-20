@@ -15,12 +15,13 @@ uniform int uReversed;
 uniform sampler2D uBed;        // seit Haithabu: Höhe des Grunds, optional
 uniform vec4 uBedRect;         // x, z der Nordwestecke, Kantenlänge (m), an (1) / aus (0)
 uniform vec3 uBedMap;          // Höhe = Wert · x + y; z: Trübung je m
+uniform vec2 uBedOutside;      // seit Rungholt: Grund außerhalb des Rechtecks (x, m), an (y = 1); aus: dort kein Wasser
 
 // Tiefe des Wassers über dem Grund am Ort p (groß, wenn kein Grund gesetzt; −1, wenn außerhalb des Rechtecks)
 float bedDepth(vec2 p) {
     if (uBedRect.w <= 0.0) return 1.0e4;
     vec2 uv = (p - uBedRect.xy) / uBedRect.z;
-    if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return -1.0;
+    if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return uBedOutside.y > 0.5 ? uLevel - uBedOutside.x : -1.0;
     return uLevel - (textureLod(uBed, uv, 0.0).r * uBedMap.x + uBedMap.y);
 }
 const float EARTH_R = 6371000.0;
@@ -59,6 +60,25 @@ vec3 longWave(vec2 p) {
     return vec3(0.0);
 }
 
+// seit Rungholt Phase 6: Strömung als Textur (RG: m/s nach Osten und Süden) über {x0, z0, Zelle, an}; die Fläche
+// kräuselt sich darin, Schaum zieht in Streifen mit, das Wasser wird trüb vom Schwebstoff (uFlowSilt: Farbe, Stärke)
+uniform sampler2D uFlow;
+uniform vec4 uFlowRect;
+uniform vec4 uFlowSilt;
+// seit Rungholt Phase 6: gegen das Kachelmuster (Befund Status_Phase4: Rauten auf dem Wasser im Watt) schwanken die
+// beiden größten Kaskaden und die Dünung mit flachem Rauschen in der Stärke (0 = aus, 1 = voll)
+uniform float uTileBreak;
+// seit Rungholt Phase 6: weicher Rand der langen Welle (0 = wie bisher: halbe Zelle über die letzte nasse hinaus, dann 1 m
+// unter den Grund)
+uniform float uLongSoft;
+
+vec2 flowAt(vec2 p) {
+    if (uFlowRect.w <= 0.0) return vec2(0.0);
+    vec2 uv = (p - uFlowRect.xy) / (uFlowRect.z * vec2(textureSize(uFlow, 0)));
+    if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return vec2(0.0);
+    return textureLod(uFlow, uv, 0.0).rg;
+}
+
 // Dünung am Ruhepunkt p: Auslenkung (xyz) und Steigungen dy/dx0, dy/dz0, Jacobi-Anteil
 void swell(vec2 p, out vec3 d, out vec3 slope) {
     d = vec3(0.0);
@@ -82,4 +102,16 @@ float vnoise(vec2 p) {
     f = f * f * (3.0 - 2.0 * f);
     float a = hash21(i), b = hash21(i + vec2(1.0, 0.0)), c = hash21(i + vec2(0.0, 1.0)), d = hash21(i + vec2(1.0, 1.0));
     return a + (b - a) * f.x + (c - a) * f.y + (a - b - c + d) * f.x * f.y;
+}
+
+// Stärke einer Kaskade am Ort (gegen das Kachelmuster): 1 ohne uTileBreak; sonst für die beiden größten 0,45 … 1,55
+// nach Rauschen über gut dreieinhalb Kachellängen, im Mittel 1
+float cascadeGain(vec2 p, int c) {
+    if (uTileBreak <= 0.0 || c > 1) return 1.0;
+    float n = vnoise(p / (uLength[c] * 3.7) + float(c) * 13.1) * 0.65 + vnoise(p / (uLength[c] * 1.3) + float(c) * 5.3) * 0.35;
+    return mix(1.0, 0.45 + 1.1 * n, uTileBreak);
+}
+float swellGain(vec2 p) {
+    if (uTileBreak <= 0.0) return 1.0;
+    return mix(1.0, 0.5 + vnoise(p / 430.0 + 3.7), uTileBreak);
 }

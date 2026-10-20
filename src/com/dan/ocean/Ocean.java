@@ -110,6 +110,32 @@ public final class Ocean {
         return o;
     }
 
+    /**
+     * Seit Rungholt (Phase 2): das Wattenmeer mit seinen Strömen und Prielen. Streichlänge 6 km (die Bucht zwischen den
+     * Inseln), Tiefe 4 m im Mittel über dem Watt, Wellenhöhe aus der Streichlänge, eine schwache Dünung aus der offenen
+     * See über die Außensände (0,25 m aus Westnordwest), kurze steile See, Schaum mittel. Die grüngraue, trübe Farbe
+     * setzt der Benutzer über {@link #WATT_WATER}, {@link #WATT_SSS}; den Grund (Watt, Priele, Strom) über die
+     * Höhentextur in {@code gl.OceanGl.Light}, die Tide über {@link #waterLevel}.
+     */
+    public static Ocean watt(int bft) {
+        Ocean o = beaufort(bft);
+        o.fetch = 6_000;
+        o.depth = 4;
+        o.fetchLimited = true;
+        o.swellHeight = 0.25;
+        o.swellPeriod = 7;
+        o.swellFromDeg = 290;
+        o.choppiness = 0.8;
+        o.foamAmount = 0.3;   // seit Rungholt Phase 4 (Befund Status_Phase3): kurze Windsee im Watt bricht selten
+        o.ringHsLow = 0.05;
+        o.ringHsHigh = 0.6;
+        o.rebuildNow();
+        return o;
+    }
+
+    /** Streulicht und Kamm des Wattenmeers: trübes Grüngrau vom Schwebstoff (linear) [G]. */
+    public static final double[] WATT_WATER = {0.030, 0.050, 0.042}, WATT_SSS = {0.10, 0.17, 0.12};
+
     /** Streulicht und Kamm eines Gletschersees: milchiges Türkis vom Gletschermehl (linear) [G]. */
     public static final double[] LAGO_WATER = {0.030, 0.105, 0.105}, LAGO_SSS = {0.07, 0.36, 0.33};
 

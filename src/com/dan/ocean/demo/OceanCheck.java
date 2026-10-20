@@ -56,6 +56,10 @@ public final class OceanCheck {
         com.dan.ocean.ObstacleField f = com.dan.ocean.ObstacleField.of(piles, -10, -10, 70, 20, 0.5, 6);
         check(f.distance(5, 0) < 0.3 && Math.abs(f.distance(5, 4) - 3.86) < 0.3 && f.distance(5, 9) >= 5.9 && f.distance(500, 0) > 1e8,
                 String.format(java.util.Locale.GERMAN, "Abstandsraster: am Pfahl %.2f m, 4 m daneben %.2f m, außerhalb weit", f.distance(5, 0), f.distance(5, 4)));
+        // seit Rungholt Phase 2: das Wattenmeer – kurze Streichlänge, flach, weniger See als auf der offenen Nordsee
+        Ocean watt = Ocean.watt(6), open = Ocean.beaufort(6);
+        check(watt.state().windSeaHs < open.state().windSeaHs * 0.7 && watt.state().windSeaHs > 0.2,
+                String.format(java.util.Locale.GERMAN, "Watt bei Bft 6: H_s %.2f m gegen %.2f m auf offener See", watt.state().windSeaHs, open.state().windSeaHs));
         Ocean noor = Ocean.noor(5);
         noor.obstacleField = f;
         double near = 0, far = 0;

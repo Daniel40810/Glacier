@@ -46,6 +46,43 @@ Silbermöwen um einen Turm auf See: Sie fliegen im Schwarm, stehen im Aufwind an
 - **Sitzplätze, die treiben:** ein `Perch` mit eigenem `Spot` (etwa die höchste Ecke eines Eisbergs) bewegt die sitzende Möwe mit; ist der Platz nicht mehr `usable()`, fliegt sie ab.
 - **Prüfung** (`FlockCheck`, Abschnitt Glacier): Kondore bleiben zwischen 110 und 700 m über Grund, sind die Hälfte der Zeit im Kreis und steigen dort mit 1,7 m/s, schlagen fast nie; eine Möwe sitzt 9 min auf einem treibenden Eisberg und treibt mit; nachts sind die Kondore fort.
 
+## Wattvögel (seit Rungholt Phase 8)
+
+Ein zweiter Kern neben `Flock`: `Waders` lässt die Vögel des Watts nach der Tide leben. Die Arten sind Datensätze (`WaderSpecies`), eine neue Art ist ein neuer Eintrag in `WaderSpecies.ALL` [G]:
+
+| Art | Länge / Spannweite | frisst | Gruppen | Flucht | da |
+|---|---|---|---|---|---|
+| Alpenstrandläufer | 0,18 / 0,38 m | am Saum, 0–25 m von der Kante, stochert 3/s, mag Schlick | 200–3000, wendet im Schwarm | 50 m | ganzjährig, im Juni/Juli wenige |
+| Austernfischer | 0,42 / 0,83 m | weiter oben, 15–250 m, stochert | 20–200 | 90 m | ganzjährig |
+| Säbelschnäbler | 0,44 / 0,77 m | watet bis 12 cm, säbelt | 20–250 | 120 m | April bis Oktober |
+| Brandgans | 0,62 / 1,10 m | seiht im Schlick | 10–120 | 150 m | ganzjährig |
+| Silbermöwe | 0,60 / 1,40 m | überall, pickt | 5–60 | 70 m | ganzjährig |
+| Lachmöwe | 0,38 / 1,00 m | am Wasser, braune Kappe März bis Juli | 10–150 | 60 m | ganzjährig |
+| Ringelgans | 0,58 / 1,15 m | weidet auf der Salzwiese | 50–600 | 200 m | Oktober bis April |
+
+- **Die Welt** (`Waders.World`): Grund, Wassertiefe, Schlick (0..1), Salzwiese und die Stunden seit dem nächsten Hochwasser. Dazu `revier` (wo gefressen wird), `roosts` (Hochwasserrastplätze), `pastures` (Weide der Gänse), `disturbers` ({x, z, Stärke}).
+- **Fressen bei Ebbe**: Jede Gruppe sucht unter 24 Orten den besten nach dem Abstand zur Wasserkante ihrer Art, der Watttiefe und dem Schlick; sie läuft langsam, die Vögel stochern und picken. Kommt die Flut in die Gruppe, weicht sie aus, läuft nach oder fliegt ein Stück.
+- **Vor der Flut fliegen alle auf**: etwa 1,3 bis 1,8 h vor Hochwasser fliegt jede Gruppe zum Rastplatz (Möwen eine halbe Stunde später), kommt 1,5 bis 2,5 h danach zurück. Gerastet wird dicht, in den Wind, auf dem Trockenen; Möwen und Gänse rasten auch nachts.
+- **Schwarm mit Umschlag**: Ein Störer (oder `flush(x, z)`) scheucht die Gruppe auf. Alpenstrandläufer wenden dann eine bis zwei Minuten über dem Watt: Ein Führungspunkt zieht Schleifen, jeder Vogel folgt ihm mit einer Verzögerung nach seinem Platz im Schwarm, die Neigung kommt aus der Querbeschleunigung. So neigt sich der Schwarm in Wellen, zeigt Rücken (dunkel) oder Bäuche (hell). Dann landen sie wieder.
+- **Netz**: `WaderMesh` baut jede Art aus ihren Zahlen (Rumpf, zwei Flügel mit Handschwingen, Beine, Hals mit Kopf und Schnabel, gebogen nach `billCurve`), mit Brustband, Kappe, Bauchfleck im Brutkleid; nah bis 1 304 Dreiecke, fern weniger als 60 %. Der Kopf (Teil 4) nickt zum Stochern.
+- **Zahl** nach `Waders.Quality` (LOW 0,35 bis ULTRA 3 × Grundzahl, Mittel 1 344 im September) und dem Monat (`presence`).
+- **Bild**: `gl/WaderGl` zeichnet eine Instanz je Vogel (14 Floats), je Art Sommer- und Winterkleid, nah und fern; `wader.vert` biegt Flügel, Beine und Kopf, Licht aus `gull.frag`.
+
+- **Vogelzug** (seit Rungholt Phase 9): im Frühjahr (März bis Mai, nach Nordost) und Herbst (September bis November, nach Südwest) ziehen Ringelgänse in Keilen von 15 bis 85 Vögeln in 70 bis 180 m Höhe über die Szene, im Hauptmonat etwa alle 30 Minuten (`migration`, `migrationInterval`, `migrationShare`, `skeins()`). Die Keile gehören nicht zu den Gruppen am Boden und nicht in die Zählung; `WaderGl` zeichnet sie mit.
+
+```java
+Waders v = new Waders();
+v.world = welt;                                  // Grund, Tiefe, Schlick, Salzwiese, Stunden seit Hochwasser
+v.revier.add(new Waders.Area(-1000, 200, 2600));
+v.roosts.add(new Waders.Area(-817, -129, 140));
+v.month = 9; v.windFromDeg = 250;
+v.settle();                                      // nach Sprüngen der Uhr
+v.step(dt);                                      // je Bild oder in Szenenzeit
+waderGl.draw(gl, v, view, light);
+```
+
+- **Demo** `demo/WaderDemo` (eigenes kleines Watt `DemoWatt`, Regler für Zeitraffer und Abstand, „Aufscheuchen“); `--bild datei.png` schreibt die Arten nah, einen Schwarm und eine Karte. **Prüfung** `demo/WaderCheck`: Arten, Netze, eine Tide (fressen bei Ebbe in ihrem Abstand zur Kante, keiner tiefer als er waten kann, stochern, vor der Flut alle auf), Störer und Schwarm mit Umschlag, Wiederholbarkeit, Zeit (0,4 ms je 5 s für 1 344 Vögel).
+
 ## Benutzung
 
 ```java
@@ -72,6 +109,9 @@ flockGl.draw(gl, f, view, light);
 | `demo/FlockDemo` | Fenster mit Reglern und Möwenflug; `--bild datei.png [breite]` schreibt vier Lagen, den Aufwind im Schnitt und die Bahnen von oben |
 | `demo/FlockScene` | eigene Szene ohne Dreiecke: See, Turm mit Galerie |
 | `demo/FlockCheck` | Prüfung ohne Fenster, endet mit „Alles in Ordnung.“ |
+| `WaderSpecies`, `WaderMesh`, `Waders` | Wattvögel: Arten als Datensätze, Netze, Verhalten nach der Tide (seit Rungholt Phase 8) |
+| `gl/WaderGl`, `gl/wader.vert` | Wattvögel zeichnen |
+| `demo/DemoWatt`, `demo/WaderDemo`, `demo/WaderCheck` | Watt zum Probieren, Demo, Prüfung der Wattvögel |
 
 ## Demo und Selbsttest
 
@@ -85,3 +125,4 @@ flockGl.draw(gl, f, view, light);
 - Fischen und Fressen sind nur Haltungen: gründeln, tauchen, picken. Es gibt keine Beute.
 - Kein Gefieder im Wind, keine einzelnen Federn; die Flügel haben zwei Glieder.
 - Rufe sind Ereignisse ohne Klang; den macht ein anderes Package.
+- Wattvögel: Futter ist eine Bewertung des Orts, keine Beute; die Gruppen gehen sich nur aus dem Weg, wenn sie Plätze suchen. Der Schwarm wendet um einen Führungspunkt, nicht nach Nachbarn je Vogel (bei 3 000 Vögeln zu teuer).

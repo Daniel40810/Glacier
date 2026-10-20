@@ -42,7 +42,14 @@ public final class Weather {
          * Luft mit großer Sicht, wenig tiefe Wolken (die Föhnmauer bleibt über dem Kamm). Die Standardkette erreicht
          * ihn nicht; eine App gibt ihn über {@link #transitions} frei.
          */
-        FOEHN("Föhnsturm");
+        FOEHN("Föhnsturm"),
+        /**
+         * Seit Rungholt Phase 3: Orkan aus Westnordwest über der Nordsee – Wind um 33 m/s, Böen darüber, geschlossene
+         * Decke, Regen und Graupelschauer, niedrige Sicht, tiefer Druck, hohe See; der Windstau einer Sturmflut. Die
+         * Standardkette erreicht ihn nicht; eine App gibt ihn über {@link #transitions} frei oder setzt ihn im Szenario.
+         * Ältere Tabellen mit neun Zeilen bleiben gültig: fehlende Zeilen und Spalten nehmen die Vorgabe bzw. 0.
+         */
+        ORKAN("Orkan");
         public final String label;
         Phase(String l) { label = l; }
     }
@@ -77,22 +84,24 @@ public final class Weather {
             {11.0, 295, 0.18, 5.0, 0.10, 1, 0.8, 16, 0.0, 1004, 9, 85, 2.4, 0},   // abklingend
             {6.5, 310, 0.15, 3.0, 0.10, 0, 0.0, 40, 0.0, 1015, 9, 75, 1.4, 0},    // aufklarend
             {2.5, 200, 0.08, 1.0, 0.25, 0, 0.0, 14, 0.9, 1022, 12, 99, 0.5, 0},   // Seenebel: schwacher Wind, feuchte Luft über kühlerem Wasser
-            {19.0, 285, 0.36, 2.0, 0.10, 0, 0.0, 90, 0.0, 1002, 17, 35, 0.6, 0}}; // Föhnsturm: böiger Fallwind, trocken, warm, große Sicht [G]
+            {19.0, 285, 0.36, 2.0, 0.10, 0, 0.0, 90, 0.0, 1002, 17, 35, 0.6, 0},  // Föhnsturm: böiger Fallwind, trocken, warm, große Sicht [G]
+            {33.0, 295, 0.30, 8.0, 0.00, 3, 8.0, 3, 0.0, 965, 7, 96, 6.0, 1}};   // Orkan aus WNW: Sturmflutwetter [G]
 
     /** Mittlere Verweildauer je Lage in Stunden (freie Regie). */
-    static final double[] DWELL = {16, 6, 4, 7, 2, 5, 4, 6, 8};
+    static final double[] DWELL = {16, 6, 4, 7, 2, 5, 4, 6, 8, 10};
 
     /** Übergangswahrscheinlichkeiten der freien Regie (Zeile: von, Spalte: nach). */
     static final double[][] MARKOV = {
-            {0, 0.82, 0, 0, 0, 0, 0, 0.18, 0},
-            {0.2, 0, 0.8, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0.5, 0.2, 0.3, 0, 0, 0},
-            {0, 0, 0, 0, 0.4, 0.6, 0, 0, 0},
-            {0, 0, 0, 0, 0, 1, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 1, 0, 0},
-            {0.85, 0, 0, 0, 0, 0, 0, 0.15, 0},
-            {0.6, 0.4, 0, 0, 0, 0, 0, 0, 0},
-            {0.6, 0.4, 0, 0, 0, 0, 0, 0, 0}};
+            {0, 0.82, 0, 0, 0, 0, 0, 0.18, 0, 0},
+            {0.2, 0, 0.8, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0.5, 0.2, 0.3, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0.4, 0.6, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+            {0.85, 0, 0, 0, 0, 0, 0, 0.15, 0, 0},
+            {0.6, 0.4, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0.6, 0.4, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0.3, 0, 0.7, 0, 0, 0, 0}};
 
     /** Ein Abschnitt der Zeitleiste: Lage, Beginn (s seit 1970), Dauer (s), Schritt eines Szenarios oder null. */
     public record Segment(Phase phase, double t0, double dur, Scenario.Step step, int index) {
@@ -302,15 +311,15 @@ public final class Weather {
 
     private double dwell(Phase p) {
         double[] dw = dwellHours;
-        double m = dw != null && dw.length == Phase.values().length ? dw[p.ordinal()] : DWELL[p.ordinal()];
+        double m = dw != null && p.ordinal() < dw.length ? dw[p.ordinal()] : DWELL[p.ordinal()];
         return Math.max(0.75, m * Math.exp(0.35 * rnd.nextGaussian() - 0.06)) * 3600;
     }
 
     private void extend(double until) {
         while (timeline.get(timeline.size() - 1).t1() < until) {
             Segment last = timeline.get(timeline.size() - 1);
-            double[][] mk = transitions != null && transitions.length == Phase.values().length ? transitions : MARKOV;
-            double[] row = seasonal(mk[last.phase().ordinal()], last.t1());
+            double[][] mk = transitions != null && last.phase().ordinal() < transitions.length ? transitions : MARKOV;
+            double[] row = seasonal(java.util.Arrays.copyOf(mk[last.phase().ordinal()], Phase.values().length), last.t1());
             double u = rnd.nextDouble(), acc = 0;
             int next = 0;
             for (int j = 0; j < row.length; j++) { acc += row[j]; if (u < acc) { next = j; break; } }
@@ -344,7 +353,7 @@ public final class Weather {
     /** Zielwerte einer Lage mit dem Klima der App ({@link #targets}) oder dem der Deutschen Bucht. */
     double[] targetRow(Phase p) {
         double[][] t = targets;
-        return t != null && t.length == Phase.values().length && t[p.ordinal()].length == N ? t[p.ordinal()] : TARGET[p.ordinal()];
+        return t != null && p.ordinal() < t.length && t[p.ordinal()].length == N ? t[p.ordinal()] : TARGET[p.ordinal()];
     }
 
     /** Zielwert der Regie zur Zeit t, an den Grenzen weich überblendet. */
@@ -403,7 +412,7 @@ public final class Weather {
         double doy = dayOfYear(t), win = 1 - summer(doy);
         double flip = switch (p) {
             case KLAR, AUFKLAREND, NEBEL -> -2.5;
-            case FRONT, STURM, ABKLINGEND, FOEHN -> 1.5;
+            case FRONT, STURM, ABKLINGEND, FOEHN, ORKAN -> 1.5;
             default -> 0;
         };
         return climateAt(c, doy) - TARGET_MEAN + anomaly + flip * win * win;

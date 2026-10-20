@@ -32,6 +32,8 @@ public final class WaveCheck {
         wall();
         System.out.println("Zwei Gitter");
         nested();
+        System.out.println("Deichbruch mit gehaltenem Meer (seit Rungholt Phase 12)");
+        dambreak();
 
         System.out.printf(Locale.GERMAN, "%d Prüfungen, %.1f s%n", all, (System.nanoTime() - t0) / 1e9);
         System.out.println(bad == 0 ? "Alles in Ordnung." : bad + " Verstöße.");
@@ -161,6 +163,50 @@ public final class WaveCheck {
         for (int i = 0; i < 100; i++) big.step(0.05);
         double ms = (System.nanoTime() - t0) / 1e6 / 5;
         check(ms < 400, String.format(Locale.GERMAN, "512² und 1 024² bei 100 m Tiefe: %.0f ms Rechnung je Sekunde Welle (eigener Faden)", ms));
+    }
+
+    /**
+     * Dammbruch nach Ritter: links ein Meer 2 m tief, festgehalten (Hold), rechts trockener Grund auf Höhe der Sohle.
+     * Durchfluss am Bruch q = (8/27)·√(g h0³) = 2,62 m²/s, Stirn mit 2√(g h0) = 8,9 m/s (ohne Reibung).
+     */
+    static void dambreak() {
+        Wave w = new Wave();
+        w.coarseN = 0;
+        w.fineN = 200;
+        w.fineNz = 40;
+        w.fineCell = 1;
+        w.spongeCells = 0;
+        w.manning = 0;
+        w.edgeDamping = 0;
+        double h0 = 2;
+        w.place(100, 20, 0, 0).build((x, z) -> h0);   // Sohle überall 2 m unter dem Ruhespiegel
+        w.initial((x, z) -> x < 60 ? 0 : -h0);         // rechts von x = 60 trocken
+        w.hold(new Wave.Hold() {
+            public boolean held(double x, double z) { return x < 20; }
+            public double eta(double t) { return 0; }
+        });
+        double v0 = 0, v1 = 0, front = 0;
+        for (int k = 0; k < 120; k++) {
+            w.step(0.05);
+            if (k == 59) v0 = wetVolume(w, 60);
+        }
+        v1 = wetVolume(w, 60);
+        for (double x = 60; x < 200; x += 0.5) if (water(w, x, 20, h0) > 0.01) front = x;
+        double q = (v1 - v0) / 3 / 40, ritter = 8.0 / 27 * Math.sqrt(9.81 * h0 * h0 * h0);
+        double hb = water(w, 10, 20, h0);
+        check(q / ritter > 0.8 && q / ritter < 1.5 && front > 60 + 15 && Math.abs(hb - h0) < 0.05 && w.heldCount() == 20 * 40,
+                String.format(Locale.GERMAN, "Durchfluss am Bruch %.2f m²/s (Ritter %.2f), Stirn (über 1 cm) nach 6 s bei %.0f m (Ritter, bis zur Spitze: %.0f m), das gehaltene Meer bleibt %.2f m tief",
+                        q, ritter, front - 60, 6 * 2 * Math.sqrt(9.81 * h0), hb));
+    }
+
+    /** Wassertiefe über einer Sohle h0 unter dem Ruhespiegel (levelAt ist NaN, wo es trocken ist). */
+    static double water(Wave w, double x, double z, double h0) { double l = w.levelAt(x, z); return Double.isNaN(l) ? 0 : Math.max(0, l + h0); }
+
+    /** Wasser rechts von x0 (m³) im feinen Gitter (1 m Zellen, 40 m breit). */
+    static double wetVolume(Wave w, double x0) {
+        double v = 0;
+        for (double x = x0 + 0.5; x < 200; x += 1) for (double z = 0.5; z < 40; z += 1) v += water(w, x, z, 2);
+        return v;
     }
 
     static void check(boolean c, String what) {

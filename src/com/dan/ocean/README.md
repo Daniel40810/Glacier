@@ -24,7 +24,7 @@ Zum Herauskopieren reicht `src/com/dan/ocean/`. Nur `demo/OceanDemo` braucht zus
 
 ## Lange Welle von außen (seit Glacier Phase 8)
 
-`OceanGl.Light.longTexture0/1` und `longRect0/1` ({x0, z0, Zelle, an}) nehmen den Wasserstand einer langen Welle als Textur, etwa aus `com.dan.wave`: 0 ist das feine Gitter, 1 das grobe, das feine hat Vorrang. Trockene Texel (≤ −29) zählen beim Abtasten nicht mit, so bleibt der Spiegel am Ufer, wo er ist. Der Scheitelshader hebt die Fläche um die Höhe; wo die Welle den Grund freilegt, taucht sie unter ihn. Der Pixelshader nimmt die Neigung in die Normale und malt Schaum an die steile Stirn. Ohne Textur ändert sich nichts. `Ocean.heightAt` kennt die lange Welle nicht; die App summiert (Schnittstelle `Sea`).
+`OceanGl.Light.longTexture0/1` und `longRect0/1` ({x0, z0, Zelle, an}) nehmen den Wasserstand einer langen Welle als Textur, etwa aus `com.dan.wave`: 0 ist das feine Gitter, 1 das grobe, das feine hat Vorrang. Trockene Texel (≤ −29) zählen beim Abtasten nicht mit, so bleibt der Spiegel am Ufer, wo er ist. Der Scheitelshader hebt die Fläche um die Höhe; wo die Welle den Grund freilegt, taucht sie unter ihn. Seit Rungholt Phase 4 gilt die Tiefe unter diesem Spiegel (Dämpfung, Saum, Durchsicht auf den Grund), und trockene Texel zeichnen kein Wasser – so kann eine Tide je Zelle (`com.dan.tide`) als lange Welle über dem Ruhespiegel `waterLevel` kommen. Der Pixelshader nimmt die Neigung in die Normale und malt Schaum an die steile Stirn. Ohne Textur ändert sich nichts. `Ocean.heightAt` kennt die lange Welle nicht; die App summiert (Schnittstelle `Sea`).
 
 ## Treibeis (seit Glacier Phase 9)
 
@@ -106,3 +106,18 @@ Dazu die Farben des milchig-türkisen Gletscherwassers `LAGO_WATER` und `LAGO_SS
 kommt grün-türkis aus dem Wasser zurück) [G]. Die App reicht das Gelände als Grund (`Light.bedTexture`, `bedRect`,
 `bedScale`, `bedOffset`) und eine hohe Trübung (`bedTurbidity`), damit der Grund nur am Ufer durchscheint.
 Rückfluss in Phase 16.
+
+## Seit Rungholt Phase 2: Wattenmeer
+
+- Preset `watt(n)`: Streichlänge 6 km, Tiefe 4 m, schwache Dünung (0,25 m, 7 s aus Westnordwest), kurze steile See; Farben `WATT_WATER`, `WATT_SSS` (trübes Grüngrau vom Schwebstoff) [G].
+- `Light.bedOutside`: Höhe des Grunds außerhalb von `bedRect`. Ohne Wert (NaN) bleibt es wie bisher (dort kein Wasser); mit Wert geht das Meer über den Rand der Höhentextur hinaus, etwa auf die offene See vor dem Ausschnitt.
+- Die Tide setzt der Benutzer über `waterLevel` (in Rungholt erst ein Platzhalter, ab Phase 4 aus `com.dan.tide`); die Köge hinter den Deichen blendet `maskTexture` mit `maskMode` −1 aus.
+
+## Seit Rungholt Phase 6: Strömung, Kachelmuster, unter Wasser
+
+Alles abschaltbar; ohne die neuen Felder zeichnet das Paket wie bisher.
+
+- `Light.flowTexture` mit `flowRect` ({x0, z0, Zelle, an}): Strömung als RG16F/RG32F (m/s nach Osten und Süden). Die Fläche kräuselt sich darin (Rauschen, das mit dem Wasser zieht, zwei Phasen überblendet), Schaum zieht ab 0,4 m/s in Streifen mit, das Wasser wird trüb (`siltColor`, `siltStrength`), der Grund verschwindet dann schneller.
+- `Light.tileBreak` 0..1: die beiden größten Kaskaden und die Dünung schwanken mit flachem Rauschen in der Stärke (0,45 bis 1,55, im Mittel 1). Gegen das Rautenmuster im flachen Wasser, wenn die größte Kachel klein ist (Watt: 24 m). `Ocean.heightAt` rechnet ohne diese Schwankung.
+- `Light.longSoft` 0..1: am Rand der nassen Zellen der langen Welle sinkt der Spiegel mit Rauschen über eine halbe Zelle unter den Grund; die Wasserlinie läuft weich statt in Treppen des Gitters (Befund Rungholt: Flutsaum über flachen Bänken in 16-m-Stufen).
+- `Light.under` und `drawUnderwater(gl, Under)`: liegt das Auge unter dem Spiegel, zeigt die Fläche ihre Unterseite (im Snellschen Fenster bis 48,6° vom Lot der gebrochene Himmel, außerhalb die Totalreflexion des Wassers), und ein Vollbild-Durchgang legt trübes Wasser über die Szene: Durchlässigkeit exp(−σ · Weg), Streulicht in Wasserfarbe, mit der Tiefe dunkler. Braucht die Tiefe der Szene als Textur.

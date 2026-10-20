@@ -17,6 +17,10 @@ Zum Herauskopieren reicht `src/com/dan/wave/`.
 - **Pegel:** `gauge(name, x, z)` zeichnet alle 0,05 s den Wasserstand auf (die letzten 5 min); `series(sekunden)`, `max()`, `min()`.
 - **Abfragen** aus jedem Faden: `heightAt` (0, wo trocken), `levelAt` (NaN, wo trocken), `slopeAt`, `velocityAt`, `depthAt`, `volume()`; `snapshot()` für die Grafik.
 
+## Gehaltener Wasserstand (seit Rungholt Phase 12)
+
+`hold(Hold)`: Zellen, für die `held(x, z)` gilt, stehen nach jedem Schritt des feinen Gitters auf `eta(t)` (über dem Ruhespiegel, nie unter dem Grund) – etwa das offene Meer vor einem Deichbruch, das nicht leerläuft, während das Wasser durch die Bresche stürzt. `heldCount()` zählt sie. `WaveCheck` prüft den Dammbruch nach Ritter: 2 m Meer, festgehalten, trockener Grund dahinter.
+
 ## Benutzung
 
 ```java

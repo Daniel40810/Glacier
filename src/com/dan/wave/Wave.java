@@ -192,6 +192,39 @@ public final class Wave {
 
     // ------------------------------------------------------------------ Quellen
 
+    // ------------------------------------------------------------------ seit Rungholt Phase 12: gehaltener Wasserstand
+
+    /**
+     * Ein Wasserstand, der im feinen Gitter festgehalten wird (über dem Ruhespiegel), etwa das offene Meer vor einem
+     * Deichbruch, das nicht leerläuft: {@code held} sagt einmal je Zelle, ob sie dazugehört, {@code eta} gibt den Stand
+     * zur Zeit t. Nach jedem Schritt des feinen Gitters gesetzt (nie unter den Grund).
+     */
+    public interface Hold { boolean held(double x, double z); double eta(double t); }
+    private Hold hold;
+    private int[] heldCells;
+
+    /** Gehaltenen Wasserstand setzen (null: keiner). */
+    public synchronized void hold(Hold h) { hold = h; heldCells = null; if (h != null && fine != null) { applyHold(fine); publish(true); } }
+
+    /** Zahl der gehaltenen Zellen (nach dem ersten Schritt). */
+    public int heldCount() { int[] c = heldCells; return c == null ? 0 : c.length; }
+
+    private void applyHold(Grid g) {
+        if (hold == null) return;
+        if (heldCells == null) {
+            int[] tmp = new int[g.nx * g.nz];
+            int k = 0;
+            for (int j = 0; j < g.nz; j++)
+                for (int i = 0; i < g.nx; i++) {
+                    int c = j * g.nx + i;
+                    if (g.h[c] > -999 && hold.held(g.x0 + (i + 0.5) * g.dx, g.z0 + (j + 0.5) * g.dx)) { tmp[k++] = c; g.touch(i, j, 2); }
+                }
+            heldCells = java.util.Arrays.copyOf(tmp, k);
+        }
+        float e = (float) hold.eta(time);
+        for (int c : heldCells) g.eta[c] = Math.max(e, -g.h[c]);
+    }
+
     /** Ein Einschlag: so viel Volumen (m³) wird am Ort verdrängt (negativ: entnommen). Sicher aus jedem Faden. */
     public void addVolume(double x, double z, double volume) { addVolume(x, z, volume, Double.NaN); }
 
@@ -284,6 +317,7 @@ public final class Wave {
         }
         if (coarse == null) {
             fine.step(dtf, gravity, manning, edgeDamping, maxSpeed, null);
+            applyHold(fine);
             cellsDone += window(fine);
             time += dtf;
         } else {
@@ -300,6 +334,7 @@ public final class Wave {
             };
             for (int k = 0; k < subs; k++) {
                 fine.step(dtf, gravity, manning, 0, maxSpeed, edge);
+                applyHold(fine);
                 cellsDone += window(fine);
             }
             if (fine.active) feedback();

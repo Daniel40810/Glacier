@@ -104,3 +104,8 @@ w.release();                                     // „Regie weiter“
   `Var`) und `dwellHours` (Verweildauern). Glacier setzt das Klima Patagoniens (Westwind vom Eisfeld, Fronten aus
   West, Föhnsturm, selten Gewitter). Ohne diese Felder läuft alles wie bisher.
 - Rückfluss in Phase 16.
+
+## Seit Rungholt Phase 3: Orkan
+
+- Neue Lage `Phase.ORKAN` („Orkan“): Wind um 33 m/s aus Westnordwest, geschlossene Decke, Regen, Sicht 3 km, Druck 965 hPa, hohe See – das Wetter einer Sturmflut [G]. Die Standardkette erreicht ihn nicht; eine App gibt ihn über `transitions` frei oder startet ihn mit `startFree(t, Phase.ORKAN)` oder im Szenario. Danach folgt Sturm oder abklingend.
+- Tabellen von Apps mit neun Zeilen (`transitions`, `targets`, `dwellHours` aus der Zeit vor dem Orkan) bleiben gültig: fehlende Zeilen nehmen die Vorgabe, fehlende Spalten zählen als 0. `WeatherCheck` prüft beides.

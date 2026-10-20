@@ -96,6 +96,11 @@ public final class OceanGl {
         public double[] brashRect = {0, 0, 1, 1};
         public double[] longRect0 = {0, 0, 1, 0}, longRect1 = {0, 0, 1, 0};
         public double[] bedRect = {0, 0, 1};
+        /**
+         * Seit Rungholt (Phase 2): Höhe des Grunds außerhalb von bedRect (m). NaN: dort kein Wasser (wie bisher); ein
+         * Wert: dort ein ebener Grund in dieser Höhe, das Meer geht über den Rand der Höhentextur hinaus weiter.
+         */
+        public double bedOutside = Double.NaN;
         public double bedScale = 1, bedOffset = 0, bedTurbidity = 0.9;
         public double[] bedColor = {0.20, 0.17, 0.12};
         /**
@@ -106,6 +111,73 @@ public final class OceanGl {
         public double level = Double.NaN;
         public int maskTexture, maskMode;
         public double[] maskRect = {0, 0, 1};
+        /**
+         * Seit Rungholt Phase 6: Strömung als Textur (RG16F oder RG32F, m/s nach Osten und Süden) über {x0, z0, Zelle,
+         * an}: die Fläche kräuselt sich darin, Schaum zieht in Streifen mit (ab 0,4 m/s), das Wasser wird trüb
+         * (siltColor, siltStrength 0..1). 0 = keine.
+         */
+        public int flowTexture;
+        public double[] flowRect = {0, 0, 1, 0};
+        public double[] siltColor = {0.085, 0.075, 0.050};
+        public double siltStrength = 0.6;
+        /**
+         * Seit Rungholt Phase 6: gegen das Kachelmuster der Kaskaden (Rauten im flachen Wasser) schwanken die beiden
+         * größten Kaskaden und die Dünung mit flachem Rauschen in der Stärke; 0 = aus (wie bisher), 1 = voll.
+         */
+        public double tileBreak;
+        /**
+         * Seit Rungholt Phase 6: das Auge liegt unter dem Spiegel. Dann zeigt die Fläche ihre Unterseite (Snellsches
+         * Fenster mit dem Himmel, außerhalb Totalreflexion des Wassers); das trübe Wasser selbst legt
+         * {@link #drawUnderwater} über die Szene.
+         */
+        public boolean under;
+        /**
+         * Seit Rungholt Phase 6: weicher Rand der langen Welle (0..1): am Rand der nassen Zellen sinkt der Spiegel mit
+         * Rauschen unter den Grund, die Wasserlinie läuft weich statt in Treppen des Gitters. 0 = wie bisher.
+         */
+        public double longSoft;
+    }
+
+    /**
+     * Seit Rungholt Phase 6: der Blick unter Wasser über die gezeichnete Szene (Tiefe als Kopie): Matrix zurück, Auge,
+     * umgekehrte Tiefe, Bildgröße, Tiefentextur; Wasserspiegel über dem Auge (m), Streulicht dicht unter dem Spiegel
+     * (Strahldichte, linear), Auslöschung im Blick (1/m, Wattenmeer trüb: rund 1) und Abnahme des Lichts mit der Tiefe (1/m).
+     */
+    public static final class Under {
+        public float[] invViewProj;
+        public double[] eye = {0, 0, 0};
+        public boolean reversedZ;
+        public int width = 1, height = 1, depthTexture;
+        public double surface;
+        public double[] scatter = {0.01, 0.012, 0.008};
+        public double sigma = 1.0, darkening = 0.35;
+    }
+
+    private int progUnder;
+
+    /** Trübes Wasser über die Szene legen (in den gebundenen Bildpuffer, Mischung ONE, SRC_ALPHA). */
+    public void drawUnderwater(GL4 gl, Under u) {
+        if (progUnder == 0) progUnder = Glsl.program(gl, "Unter Wasser", new String[0], "underwater.vert", "underwater.frag");
+        gl.glUseProgram(progUnder);
+        gl.glUniformMatrix4fv(gl.glGetUniformLocation(progUnder, "uInvVP"), 1, false, u.invViewProj, 0);
+        gl.glUniform3f(gl.glGetUniformLocation(progUnder, "uCam"), (float) u.eye[0], (float) u.eye[1], (float) u.eye[2]);
+        gl.glUniform1i(gl.glGetUniformLocation(progUnder, "uReversed"), u.reversedZ ? 1 : 0);
+        gl.glUniform2f(gl.glGetUniformLocation(progUnder, "uViewport"), u.width, u.height);
+        gl.glUniform1f(gl.glGetUniformLocation(progUnder, "uSurface"), (float) u.surface);
+        gl.glUniform3f(gl.glGetUniformLocation(progUnder, "uScatter"), (float) u.scatter[0], (float) u.scatter[1], (float) u.scatter[2]);
+        gl.glUniform2f(gl.glGetUniformLocation(progUnder, "uSigma"), (float) u.sigma, (float) u.darkening);
+        gl.glActiveTexture(GL.GL_TEXTURE0);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, u.depthTexture);
+        gl.glUniform1i(gl.glGetUniformLocation(progUnder, "uDepth"), 0);
+        gl.glDisable(GL.GL_DEPTH_TEST);
+        gl.glDepthMask(false);
+        gl.glEnable(GL.GL_BLEND);
+        gl.glBlendFunc(GL.GL_ONE, GL.GL_SRC_ALPHA);
+        gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3);
+        gl.glDisable(GL.GL_BLEND);
+        gl.glDepthMask(true);
+        gl.glEnable(GL.GL_DEPTH_TEST);
+        gl.glUseProgram(0);
     }
 
     private int progSpectrum, progFft, progAssemble, progSurface;
@@ -382,6 +454,7 @@ public final class OceanGl {
         gl.glUniform1i(gl.glGetUniformLocation(p, "uBed"), 7);
         gl.glUniform4f(gl.glGetUniformLocation(p, "uBedRect"), (float) light.bedRect[0], (float) light.bedRect[1],
                 (float) Math.max(1, light.bedRect[2]), light.bedTexture != 0 ? 1f : 0f);
+        gl.glUniform2f(gl.glGetUniformLocation(p, "uBedOutside"), Double.isNaN(light.bedOutside) ? 0f : (float) light.bedOutside, Double.isNaN(light.bedOutside) ? 0f : 1f);
         gl.glUniform3f(gl.glGetUniformLocation(p, "uBedMap"), (float) light.bedScale, (float) light.bedOffset, (float) light.bedTurbidity);
         gl.glUniform3f(gl.glGetUniformLocation(p, "uBedColor"), (float) light.bedColor[0], (float) light.bedColor[1], (float) light.bedColor[2]);
         gl.glActiveTexture(GL.GL_TEXTURE0 + 9);
@@ -405,6 +478,15 @@ public final class OceanGl {
         gl.glUniform3f(gl.glGetUniformLocation(p, "uMaskRect"), (float) light.maskRect[0], (float) light.maskRect[1], (float) Math.max(1, light.maskRect[2]));
         gl.glUniform4f(gl.glGetUniformLocation(p, "uLongR1"), (float) light.longRect1[0], (float) light.longRect1[1],
                 (float) Math.max(0.01, light.longRect1[2]), light.longTexture1 != 0 && light.longRect1[3] > 0 ? 1f : 0f);
+        gl.glActiveTexture(GL.GL_TEXTURE0 + 13);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, light.flowTexture);
+        gl.glUniform1i(gl.glGetUniformLocation(p, "uFlow"), 13);
+        gl.glUniform4f(gl.glGetUniformLocation(p, "uFlowRect"), (float) light.flowRect[0], (float) light.flowRect[1],
+                (float) Math.max(0.01, light.flowRect[2]), light.flowTexture != 0 && light.flowRect[3] > 0 ? 1f : 0f);
+        gl.glUniform4f(gl.glGetUniformLocation(p, "uFlowSilt"), (float) light.siltColor[0], (float) light.siltColor[1], (float) light.siltColor[2], (float) light.siltStrength);
+        gl.glUniform1f(gl.glGetUniformLocation(p, "uTileBreak"), (float) light.tileBreak);
+        gl.glUniform1i(gl.glGetUniformLocation(p, "uUnder"), light.under ? 1 : 0);
+        gl.glUniform1f(gl.glGetUniformLocation(p, "uLongSoft"), (float) light.longSoft);
         gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glDisable(GL.GL_CULL_FACE);
         gl.glEnable(GL.GL_DEPTH_TEST);
@@ -453,7 +535,8 @@ public final class OceanGl {
     public void dispose(GL4 gl) {
         if (fieldTex != 0) { gl.glDeleteTextures(1, new int[]{fieldTex}, 0); fieldTex = 0; fieldUp = null; }
         deleteTextures(gl);
-        for (int p : new int[]{progSpectrum, progAssemble, progSurface}) if (p != 0) gl.glDeleteProgram(p);
+        for (int p : new int[]{progSpectrum, progAssemble, progSurface, progUnder}) if (p != 0) gl.glDeleteProgram(p);
+        progUnder = 0;
         for (int p : fftByN.values()) gl.glDeleteProgram(p);
         fftByN.clear();
         progSpectrum = progFft = progAssemble = progSurface = 0;

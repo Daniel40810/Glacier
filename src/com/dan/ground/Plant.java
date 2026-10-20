@@ -164,6 +164,60 @@ public final class Plant {
         return p;
     }
 
+    // ------------------------------------------------------------ Salzwiese und Marsch (seit Rungholt Phase 10)
+
+    /**
+     * Queller (Salicornia europaea): fingerhohe, fleischige Sprosse ohne Blätter im untersten Vorland; im Sommer
+     * frischgrün, ab Ende August rot, im Winter braun und abgestorben.
+     */
+    public static Plant queller() {
+        Plant p = new Plant("Queller", "Salicornia europaea", Kind.GRASS);
+        p.size = 0.14f; p.sizeVar = 0.4f; p.blades = 7; p.bladeWidth = 0.009f; p.spread = 0.035f; p.lean = 0.25f; p.stiffness = 1.6f;
+        p.green = new float[]{0.08f, 0.17f, 0.04f}; p.dry = new float[]{0.30f, 0.05f, 0.04f}; p.winter = new float[]{0.14f, 0.09f, 0.06f};
+        p.greenUp = 150; p.dryStart = 235; p.dryFull = 275;
+        return p;
+    }
+
+    /** Andel (Puccinellia maritima): niedriger, graugrüner Rasen der Salzwiese, von Schafen kurz gehalten. */
+    public static Plant andel() {
+        Plant p = new Plant("Andel", "Puccinellia maritima", Kind.GRASS);
+        p.size = 0.12f; p.blades = 12; p.bladeWidth = 0.008f; p.spread = 0.07f; p.lean = 0.55f; p.stiffness = 0.6f;
+        p.green = new float[]{0.07f, 0.12f, 0.06f}; p.dry = new float[]{0.20f, 0.19f, 0.12f}; p.winter = new float[]{0.15f, 0.14f, 0.10f};
+        p.greenUp = 100; p.dryStart = 250; p.dryFull = 300;
+        return p;
+    }
+
+    /** Strandaster (Tripolium pannonicum): violette Strahlen um eine gelbe Mitte, August bis Oktober in der Salzwiese. */
+    public static Plant strandaster() {
+        Plant p = new Plant("Strandaster", "Tripolium pannonicum", Kind.FLOWER);
+        p.size = 0.35f; p.petals = 16; p.head = 0.022f; p.petal = new float[]{0.35f, 0.22f, 0.55f}; p.center = new float[]{0.75f, 0.55f, 0.04f};
+        p.bloomStart = 215; p.bloomPeak = 245; p.bloomEnd = 290; p.stiffness = 1.2f;
+        return p;
+    }
+
+    /** Weißklee (Trifolium repens): weiße Köpfchen in der Weide, Mai bis September. */
+    public static Plant whiteClover() {
+        Plant p = new Plant("Weißklee", "Trifolium repens", Kind.FLOWER);
+        p.size = 0.12f; p.petals = 14; p.head = 0.012f; p.petal = new float[]{0.72f, 0.72f, 0.66f}; p.center = new float[]{0.62f, 0.60f, 0.52f};
+        p.bloomStart = 135; p.bloomPeak = 180; p.bloomEnd = 260; p.stiffness = 1.0f;
+        return p;
+    }
+
+    /** Scharfer Hahnenfuß (Ranunculus acris): glänzend gelbe Schalen über der Fettweide, Mai bis Juli. */
+    public static Plant buttercup() {
+        Plant p = new Plant("Hahnenfuß", "Ranunculus acris", Kind.FLOWER);
+        p.size = 0.4f; p.petals = 5; p.head = 0.012f; p.petal = new float[]{0.85f, 0.65f, 0.02f}; p.center = new float[]{0.7f, 0.5f, 0.02f};
+        p.bloomStart = 130; p.bloomPeak = 160; p.bloomEnd = 200; p.stiffness = 1.1f;
+        return p;
+    }
+
+    /** Klei: dunkle, graubraune Schollen aus Marschton, wo das Vieh tritt und am Grabenrand. */
+    public static Plant klei() {
+        Plant p = new Plant("Klei", "", Kind.SOIL);
+        p.size = 0.9f; p.sizeVar = 0.5f; p.color = new float[]{0.085f, 0.075f, 0.06f};
+        return p;
+    }
+
     // ------------------------------------------------------------ Steine und Erde
 
     /** Kiesel: klein, rund, grau bis braun. */

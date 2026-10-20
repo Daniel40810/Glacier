@@ -216,12 +216,12 @@ public final class WeatherCheck {
         boolean all = true;
         int chain = 0;
         for (Weather.Phase ph : Weather.Phase.values()) {
-            if (ph == Weather.Phase.FOEHN) { all &= share[ph.ordinal()] == 0; continue; }   // nur mit eigenem Klima
+            if (ph == Weather.Phase.FOEHN || ph == Weather.Phase.ORKAN) { all &= share[ph.ordinal()] == 0; continue; }   // nur mit eigenem Klima oder im Szenario
             all &= share[ph.ordinal()] > 0;
             chain++;
         }
         check(all && legal && stormShare > 0.05 && stormShare < 0.3 && seen.size() > 30,
-                f("Freie Regie, 60 Tage: alle %d Lagen der Kette (Föhnsturm nur mit eigenem Klima), %d Wechsel nur entlang der Kette, Sturm und Gewitter %.0f %%, Seenebel %.0f %% der Zeit",
+                f("Freie Regie, 60 Tage: alle %d Lagen der Kette (Föhnsturm und Orkan nur mit eigenem Klima), %d Wechsel nur entlang der Kette, Sturm und Gewitter %.0f %%, Seenebel %.0f %% der Zeit",
                         chain, seen.size(), stormShare * 100, share[Weather.Phase.NEBEL.ordinal()] / tot * 100));
         // Seit Glacier Phase 3: eigenes Klima mit Föhnsturm
         Weather pf = new Weather();
@@ -230,7 +230,7 @@ public final class WeatherCheck {
         mk[0][8] = 1; mk[8][0] = 1;
         for (int i = 1; i < 8; i++) mk[i][0] = 1;
         double[][] tg = new double[9][];
-        for (Weather.Phase ph : Weather.Phase.values()) tg[ph.ordinal()] = Weather.target(ph);
+        for (int i = 0; i < 9; i++) tg[i] = Weather.target(Weather.Phase.values()[i]);   // eine alte Tabelle mit neun Zeilen (ohne Orkan)
         tg[8][0] = 21;
         pf.transitions = mk;
         pf.targets = tg;
@@ -242,6 +242,19 @@ public final class WeatherCheck {
             if (r.phase() == Weather.Phase.FOEHN) { foehn++; maxW = Math.max(maxW, r.wind()); }
         }
         check(foehn > 100 && maxW > 20, f("Eigenes Klima: Föhnsturm erreicht (%d von 1440 Proben), Wind bis %.1f m/s aus der eigenen Zielzeile", foehn, maxW));
+        // ------------------------------------------------ seit Rungholt Phase 3: Orkan aus WNW, auch mit alten Tabellen (9 Zeilen)
+        Weather ok = new Weather();
+        ok.transitions = pf.transitions;
+        ok.startFree(tf, Weather.Phase.ORKAN);
+        double maxO = 0, minP = 2000, dirO = 0;
+        Weather.Phase nachOrkan = null;
+        for (double t = tf; t < tf + 2 * 86400; t += 600) {
+            Weather.Snapshot r = ok.update(t, 0.05);
+            if (r.phase() == Weather.Phase.ORKAN) { if (r.wind() > maxO) { maxO = r.wind(); dirO = r.fromDeg(); } minP = Math.min(minP, r.pressure()); }
+            else if (nachOrkan == null) nachOrkan = r.phase();
+        }
+        check(maxO > 28 && minP < 975 && dirO > 270 && dirO < 320 && (nachOrkan == Weather.Phase.STURM || nachOrkan == Weather.Phase.ABKLINGEND),
+                f("Orkan: Wind bis %.1f m/s aus %03.0f°, Druck %.0f hPa, danach %s (mit einer alten Tabelle aus neun Zeilen)", maxO, dirO, minP, nachOrkan == null ? "—" : nachOrkan.label));
         check(nWarm > 0 && nCold > 0 && warm / nWarm - cold / nCold > 2.5, f("Tagesgang bei klarem Wetter: 15 Uhr %.1f °C, 4 Uhr %.1f °C", warm / nWarm, cold / nCold));
 
         // ------------------------------------------------ Hilfen

@@ -54,6 +54,20 @@ Erzeugt und nach Gehör gebaut [G]. Ausgelöst wird mit `event(Kind, x, y, z, St
 - **Dazu:** Schläge, wenn Eis oder Steine aneinanderstoßen.
 - Hörbar bis 3 km; der Pegel zählt zum Teil „See“.
 
+## Das Watt (seit Rungholt Phase 14)
+
+Erzeugt und nach Gehör gebaut [G], keine Aufnahmen. Ausgelöst mit `event(Kind, x, y, z, Stärke, tone)` (`Wadden`).
+
+- **Wattvögel nach Art:** Austernfischer (`AUSTERNFISCHER`, scharfes „kliep“, ab Stärke 0,8 das Trillern, 98 bis 100 dB in 1 m), Alpenstrandläufer (`ALPENSTRANDLAEUFER`, tone = Zahl der Vögel: ein dünnes Trillern im Trupp, 80 + 10 · lg(n) dB), Säbelschnäbler (`SAEBELSCHNAEBLER`, „plüit“, 90 dB), Brandgans (`BRANDGANS`, Kehllaute, der Pfiff des Erpels, 84 bis 88 dB), Lachmöwe (`LACHMOEWE`, 92 dB), Ringelgänse (`RINGELGANS`, tone = Zahl: das Murmeln eines Trupps, 85 + 8 · lg(n) dB), ein wendender Schwarm (`SCHWARM`, tone = Zahl: Flügelrauschen, 70 + 10 · lg(n / 100) dB). Die Silbermöwe bleibt `MOEWE`.
+- **Seehunde:** `SEEHUND` (Schnauben oder Knurren, 78 bis 80 dB), `HEULER` (das Rufen des Jungen nach der Mutter, 85 dB).
+- **1362:** `RIND` (100 dB), `SCHAF` (85 dB), `GLOCKE` (tone 0 = Prime 311 Hz, 1 = 415 Hz; neun Teiltöne nach dem Muster einer Kirchenglocke, je als schwebendes Paar; 118 dB in 1 m).
+- **Die Glocken aus dem Watt** (`GLOCKE_WATT`, die Sage): dieselben Teiltöne, dumpf wie unter Wasser (Tiefpass 900 Hz), mit leichtem Schwanken der Tonhöhe (0,6 % bei 0,4 Hz) und zwei Echos (0,11 und 0,27 s), 130 dB in 1 m [G], damit sie über das Watt tragen.
+- **Priele** (`Stream`, `soundscape.streams`): Rauschen und Glucksen an der Kante, lauter und heller mit der Strömung. 52 + 22 · lg(v / 0,5) + 5 · lg(Breite / 10) dB in 1 m. Die App setzt Ort, Strömung und Breite je Bild; die nächsten vier in 600 m klingen. Pegel im Teil „Watt und Priel“.
+- **Knistern** (`mudCrackle` 0..1): das Watt, das frisch trockengefallen ist, knackt leise (Luft aus den Gängen und Poren, platzende Bläschen). Kurze helle Knackse, rund 35 dB am Ohr bei voller Fläche.
+- **Der Wind trägt den Schall** (`windCarry`, `carryDb`): mit dem Wind bis +5 dB, gegen den Wind bis −24 dB (Schallschatten), stärker mit Wind und Abstand (Maß Wind · √(Abstand / 100 m)), dazu ein Schwanken in Böen (Ornstein-Uhlenbeck, 2,5 s, bis ±6 dB) [G, nach der Größenordnung aus der Schallausbreitung im Freien]. Unter 50 m und ohne `windCarry` 0. Gilt für Ereignisse und Wildwasser.
+- **Wind am Ohr** misst seit Phase 14 die Höhe über `waterLevel` (Wasser oder Grund unter dem Ohr), nicht über null.
+- Prüfung (`SoundscapeCheck`): Schwerpunkt und Pegel der Rufe, Prime der Glocke, die dumpfe Glocke aus dem Watt, Priel nach Strömung, Knistern, der Wind, der den Schall trägt.
+
 ## Benutzung
 
 ```java
@@ -93,7 +107,7 @@ Ohne Lautsprecher: `s.render(Sekunden)` gibt verschränktes Stereo, `Wav.write(d
 
 ## Grenzen
 
-- Kein Doppler, keine Bodenreflexion, kein Wind, der den Schall verweht; Richtung nur in der Ebene.
+- Kein Doppler, keine Bodenreflexion; Richtung nur in der Ebene. Der Wind trägt den Schall nur als Pegel (seit Rungholt Phase 14), ohne Krümmung der Strahlen oder Laufzeit.
 - Die Pegel der Betten sind geschätzt und an Erfahrungswerte angelehnt, nicht gemessen; Hörner und Typhon folgen den Vorschriften.
-- Die Möwe ist eine Silbermöwe. Die Rufe der übrigen Arten sind nach Gehör und Beschreibungen gebaut, keine Aufnahmen; man erkennt die Art, nicht das einzelne Tier. Das Stimmengewirr hat keine Wörter. Das Nebelhorn ist ein Diaphon nach Gehör, kein bestimmtes Horn.
+- Die Möwe ist eine Silbermöwe. Die Rufe der Wattvögel sind Arten, keine Individuen und kein Gesang. Die Rufe der übrigen Arten sind nach Gehör und Beschreibungen gebaut, keine Aufnahmen; man erkennt die Art, nicht das einzelne Tier. Das Stimmengewirr hat keine Wörter. Das Nebelhorn ist ein Diaphon nach Gehör, kein bestimmtes Horn.
 - Der Hall ist ein Schroeder-Hall, kein Abbild des Raums.

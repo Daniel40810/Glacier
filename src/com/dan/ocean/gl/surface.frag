@@ -49,6 +49,7 @@ uniform int uBrashOn;
 uniform sampler2D uMask;        // seit Glacier Phase 13: ein gestauter Seearm (1) als eigener Spiegel, optional
 uniform vec3 uMaskRect;         // Ecke x, z, Kantenlänge (m)
 uniform int uMaskMode;          // 1: nur innen zeichnen, −1: nur außen, 0: aus
+uniform int uUnder;             // seit Rungholt Phase 6: das Auge liegt unter dem Spiegel
 
 // Lichtstärke des Punktlichts in Richtung w (vom Licht weg), mal Faktor
 vec3 pointIntensity(vec3 w) {
@@ -137,12 +138,14 @@ void main() {
     for (int c = 0; c < 4; c++) {
         if (c >= uCascades) break;
         vec3 uv = vec3(vRest / uLength[c], float(c));
-        vec4 dv = texture(uDeriv, uv);
+        float g = cascadeGain(vRest, c);
+        vec4 dv = texture(uDeriv, uv) * g;
         sx += dv.x; sz += dv.y; jx += dv.z; jz += dv.w;
-        keep *= 1.0 - texture(uDisp, uv).w;
+        keep *= 1.0 - clamp(texture(uDisp, uv).w * g, 0.0, 1.0);
     }
     vec3 swd, sws;
     swell(vRest, swd, sws);
+    sws *= swellGain(vRest);
     sx += sws.x; sz += sws.y;
     vec2 rs = rippleSlope(vWorld.xz);
     // seit Glacier Phase 8: Neigung der langen Welle; an ihrer steilen Stirn bricht sie weiß
@@ -158,9 +161,40 @@ void main() {
         }
     }
     if (uDetailP.w > 0.0) rs += texture(uDetail, vWorld.xz / uDetailP.x).rg * uDetailP.y * exp(-vDist / uDetailP.z);
+    // seit Rungholt Phase 6: Strömung. Kräuselung als Rauschen, das mit dem Wasser zieht (zwei Phasen, überblendet,
+    // damit es sich nicht endlos dehnt); Stärke mit der Geschwindigkeit, nur nah
+    vec2 fv = flowAt(vRest);
+    float fsp = length(fv);
+    if (fsp > 0.04 && vDist < 900.0) {
+        float k = 1.0 / 1.7, amp = 0.22 * smoothstep(0.05, 1.0, fsp) * (1.0 - smoothstep(300.0, 900.0, vDist));
+        vec2 g = vec2(0.0);
+        for (int ph = 0; ph < 2; ph++) {
+            float t = fract(uTime / 4.0 + 0.5 * float(ph));
+            vec2 q = (vRest - fv * t * 4.0) * k + float(ph) * 7.7;
+            float e = 0.15;
+            vec2 gg = vec2(vnoise(q + vec2(e, 0.0)) - vnoise(q - vec2(e, 0.0)), vnoise(q + vec2(0.0, e)) - vnoise(q - vec2(0.0, e))) / (2.0 * e) * k;
+            g += gg * (1.0 - abs(2.0 * t - 1.0));
+        }
+        rs += g * amp;
+    }
     vec3 n = normalize(vec3(-(sx / max(0.2, 1.0 + jx + 0.5 * sws.z) + rs.x), 1.0, -(sz / max(0.2, 1.0 + jz + 0.5 * sws.z) + rs.y)));
 
     vec3 V = normalize(uCam - vWorld);
+    // seit Rungholt Phase 6: von unten. Im Snellschen Fenster (bis 48,6° vom Lot) der gebrochene Himmel, außerhalb die
+    // Totalreflexion des trüben Wassers; das Wasser zwischen Auge und Fläche legt danach drawUnderwater darüber
+    if (uUnder == 1 && uCam.y < vWorld.y) {
+        vec3 up = sky(vec3(0.0, 1.0, 0.0));
+        vec3 eD = up * 3.5 + sunC * max(uSunDir.y, 0.0);
+        vec3 deep = uWaterColor * eD * 0.11 * 0.6;
+        vec3 t = refract(-V, -n, 1.33);
+        vec3 c = deep;
+        if (dot(t, t) > 0.0) {
+            float Fu = 0.02 + 0.98 * pow(1.0 - clamp(dot(V, -n), 0.0, 1.0), 5.0);
+            c = mix(sky(normalize(t)) * 0.85 + sunC * pow(max(dot(normalize(t), uSunDir), 0.0), 400.0) * 2.0, deep, Fu);
+        }
+        frag = vec4(c, 1.0);
+        return;
+    }
     if (dot(n, V) < 0.02) n = normalize(n + V * (0.02 - dot(n, V)));
     float ndv = clamp(dot(n, V), 0.0, 1.0);
     float F = 0.02 + 0.98 * pow(1.0 - ndv, 5.0);
@@ -175,6 +209,9 @@ void main() {
     float sunUp = max(uSunDir.y, 0.0);
     vec3 eDown = skyUp * 3.5 + sunC * sunUp + moonC * max(uMoonDir.y, 0.0);
     vec3 body = uWaterColor * eDown * 0.11;
+    // Trübung: schnelles, flaches Wasser wirbelt Schwebstoff auf (Farbe uFlowSilt.rgb, Stärke .a)
+    float silt = uFlowRect.w > 0.0 ? clamp(uFlowSilt.a * (smoothstep(0.1, 1.0, fsp) * 0.7 + 0.3 * (1.0 - smoothstep(0.3, 3.0, vDepth))), 0.0, 0.85) : 0.0;
+    body = mix(body, uFlowSilt.rgb * eDown * 0.11, silt);
     float crest = smoothstep(0.25, 1.0, vHeight / max(0.4 * uHs, 0.05));
     vec3 Lh = normalize(vec3(uSunDir.x, 0.0, uSunDir.z) + vec3(0.0, 1e-4, 0.0));
     vec3 Vh = normalize(vec3(V.x, 0.0, V.z) + vec3(0.0, 1e-4, 0.0));
@@ -184,7 +221,7 @@ void main() {
     // seit Haithabu: im Flachwasser scheint der Grund durch (Weg hin und zurück, schräg länger), bei uBedRect.w = 0 nie
     if (uBedRect.w > 0.0 && vDepth < 8.0) {
         float path = max(vDepth, 0.0) * (1.0 + 1.0 / max(V.y, 0.15));
-        float T = exp(-uBedMap.z * path);
+        float T = exp(-uBedMap.z * (1.0 + 2.0 * silt) * path);
         vec3 bedLit = uBedColor / 3.14159265 * (sunC * sunUp * exp(-uBedMap.z * max(vDepth, 0.0) / max(sunUp, 0.15)) + skyUp * 3.5);
         body = mix(body, bedLit, T);
     }
@@ -235,7 +272,15 @@ void main() {
         float shore = (1.0 - smoothstep(0.02, 0.22, vDepth)) * smoothr(2.5, 9.0, uWindSpeed);
         ring = max(ring, shore * (0.35 + 0.65 * vnoise(vec2(vWorld.x * 1.3 - uTime * 0.4, vWorld.z * 1.3 + uTime * 0.3))) * 0.6);
     }
-    foam = clamp(max(max(max(foam, streak), ring), longFoam), 0.0, 1.0);
+    // Schaum in Streifen, die mit der Strömung ziehen (ab 0,4 m/s), dichter im Flachen
+    float flowFoam = 0.0;
+    if (fsp > 0.3) {
+        vec2 fd = fv / fsp;
+        float al = dot(vRest, fd), ac = dot(vRest, vec2(-fd.y, fd.x));
+        float sn = vnoise(vec2(al / 7.0 - uTime * fsp / 7.0, ac / 0.9)) * 0.6 + vnoise(vec2(al / 2.3 - uTime * fsp / 2.3, ac / 0.4)) * 0.4;
+        flowFoam = smoothstep(0.6, 0.85, sn) * smoothstep(0.35, 1.1, fsp) * (0.35 + 0.4 * (1.0 - smoothstep(0.3, 2.0, vDepth)));
+    }
+    foam = clamp(max(max(max(max(foam, streak), ring), longFoam), flowFoam), 0.0, 1.0);
     // Struktur: in Windrichtung gestrecktes Rauschen; wenig Schaum zeigt nur die Spitzen (zerrissene Schaumköpfe),
     // viel Schaum deckt alles. In der Ferne wird die Struktur weich, damit nichts flimmert.
     vec2 fp = vec2(along * 0.55, across);

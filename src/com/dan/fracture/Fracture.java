@@ -135,6 +135,8 @@ public final class Fracture {
     public static Fracture rock() { Fracture f = new Fracture(); f.material = Material.rock(); return f; }
     /** Beton einer Staumauer. */
     public static Fracture concrete() { Fracture f = new Fracture(); f.material = Material.concrete(); return f; }
+    /** Seit Rungholt Phase 12: ein Deich aus Klei ({@link Material#klei}). */
+    public static Fracture klei() { Fracture f = new Fracture(); f.material = Material.klei(); return f; }
 
     /** Fallzeit aus der Höhe h (m) ohne Luft: √(2h/g) (Handrechnung für die Prüfung). */
     public double freeFall(double h) { return Math.sqrt(2 * Math.max(0, h) / gravity); }

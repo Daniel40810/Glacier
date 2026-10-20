@@ -1031,7 +1031,7 @@ public final class Pruefung {
         // Prüfregeln (CHECK) passen zur App
         boolean ck = true;
         for (String b : com.dan.glacier.scene.Regie.BEFEHLE) ck &= t01.contains("'" + b.toUpperCase(Locale.ROOT) + "'");
-        for (com.dan.weather.Weather.Phase p : com.dan.weather.Weather.Phase.values()) ck &= t01.contains("'" + p.name() + "'");
+        for (com.dan.weather.Weather.Phase p : com.dan.weather.Weather.Phase.values()) ck &= p == com.dan.weather.Weather.Phase.ORKAN || t01.contains("'" + p.name() + "'");   // den Orkan (aus Rungholt) nutzt Glacier nicht
         for (com.dan.glacier.scene.Ruptura.Phase p : com.dan.glacier.scene.Ruptura.Phase.values()) ck &= t01.contains("'" + p.name() + "'");
         for (String a : new String[]{"TURM", "SCHEIBE", "FUSS", "REGIE", "HAND", "KARTE", "REGIEBUCH", "OFFEN", "GESCHMOLZEN", "GESTRANDET", "AUS_DER_SZENE", "MERKEN"}) ck &= t01.contains("'" + a + "'");
         check(ck, "CHECK-Regeln kennen alle Befehle der Regiebücher, Wetterlagen, Abschnitte der Ruptura, Arten und Auslöser der Chronik");

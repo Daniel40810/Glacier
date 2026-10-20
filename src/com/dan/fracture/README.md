@@ -61,6 +61,10 @@ Fester Schritt 1/120 s. Gleicher `seed`, gleiche Zellen, gleicher Riss, gleicher
 | `Fracture.rock()` | Granit: 2 700 kg/m³, Zug 10 MPa, Druck 150 MPa, φ 45° |
 | `Fracture.concrete()` | Beton: 2 400 kg/m³, Zug 3 MPa, Druck 30 MPa, φ 37° |
 
+## Klei (seit Rungholt Phase 12)
+
+`Material.klei()` / `Fracture.klei()`: nasser Klei eines mittelalterlichen Seedeichs [G]: 1 900 kg/m³, E 30 MPa, Zug 15 kPa, Druck 150 kPa, φ 25°, Streuung 30 %. Ein Deich aus Klei hält den Wasserdruck allein; er bricht, wenn das überlaufende Wasser die Binnenböschung ausspült (`Solid.melt`) und der Rest durchnässt (`Solid.weaken`). In Rungholt bricht so ein Abschnitt von 50 m mit 150 Zellen in rund einer Minute in gut hundert Stücke.
+
 ## Aufbau
 
 | Klasse | Aufgabe |

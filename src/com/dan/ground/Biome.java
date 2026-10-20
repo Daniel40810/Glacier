@@ -49,6 +49,44 @@ public final class Biome {
     }
 
     /**
+     * Deich und Salzwiese an der Nordsee (seit Rungholt Phase 3): kurz geweidetes Deichgras (das hohe zeichnet
+     * {@code com.dan.reed}), Seggen in den feuchten Senken, wenig Weißklee-Ersatz (Löwenzahn, Margeriten), kaum Steine
+     * (Marschboden). Gut halb so dicht wie {@link #europe()}, damit die Bodendecke auf dem Prozessor billig bleibt.
+     * Seit Rungholt Phase 10 im Nassen (Vorland) auch Andel, Queller und Strandaster.
+     */
+    public static Biome deich() {
+        return new Biome("Deich · Nordsee")
+                .add(Plant.meadowGrass(), 0, 5.2f, 0).add(Plant.sedge(), 0, 1.2f, 1)
+                .add(Plant.andel(), 0, 0.8f, 1).add(Plant.queller(), 0, 0.4f, 1)
+                .add(Plant.dandelion(), 1, 1.2f, 0.2f).add(Plant.oxeyeDaisy(), 1, 0.6f, -0.2f).add(Plant.strandaster(), 1, 0.25f, 1)
+                .add(Plant.pebble(), 2, 0.8f, 0)
+                .add(Plant.soil(), 3, 0.1f, 0);
+    }
+
+    /**
+     * Seit Rungholt Phase 10: Salzwiese an der Nordsee: Andelrasen, im nassen Teil Queller (im Herbst rot), Strandaster,
+     * kaum Steine, offener Klei am Priel.
+     */
+    public static Biome salzwiese() {
+        return new Biome("Salzwiese · Nordsee")
+                .add(Plant.andel(), 0, 8.0f, 0.4f).add(Plant.queller(), 0, 6.0f, 1)
+                .add(Plant.strandaster(), 1, 0.8f, 0.6f)
+                .add(Plant.klei(), 3, 0.15f, 1);
+    }
+
+    /**
+     * Seit Rungholt Phase 10: Marsch der Edomsharde 1362: Fettweide mit Wiesen-Rispengras und Weißklee, Hahnenfuß, Seggen
+     * an den Grabenrändern, Klei, wo das Vieh tritt; keine Steine (Marschboden). Seit Rungholt Phase 12 dünner (Befund
+     * Status_Phase11: 4,3 ms Bodendecke auf dem Prozessor über der Marsch).
+     */
+    public static Biome marsch() {
+        return new Biome("Marsch · 1362")
+                .add(Plant.meadowGrass(), 0, 4.6f, 0).add(Plant.sedge(), 0, 0.9f, 1)
+                .add(Plant.whiteClover(), 1, 1.6f, 0).add(Plant.buttercup(), 1, 0.7f, 0.2f).add(Plant.dandelion(), 1, 0.35f, 0)
+                .add(Plant.klei(), 3, 0.2f, 0.5f);
+    }
+
+    /**
      * Schlei im Herbst (seit Haithabu Phase 2b): im Wald Adlerfarn und Seggen (die Laubstreu malt das Gelände), auf den Wiesen späte
      * Schafgarbe und Rainfarn, Kiesel und eiszeitliche Findlinge. Das Gras selbst liefert dort {@code com.dan.reed}.
      */

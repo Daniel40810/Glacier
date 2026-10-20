@@ -205,6 +205,34 @@ public final class BuoyancyCheck {
         }
         check(ok && maxPitch < 30, f("Bft 12, H_s 14 m, 5 min: alles bleibt endlich; der Kümo stampft bis %.0f°, rollt bis %.0f°", maxPitch, maxSR));
 
+        // seit Rungholt Phase 11: die Kogge, die im Watt trockenfällt
+        final double[] lvl = {1.0};
+        com.dan.buoyancy.Sea tidal = new com.dan.buoyancy.Sea() {
+            public double height(double x, double z) { return Math.max(-2.0, lvl[0]); }
+            public double level() { return lvl[0]; }
+            public double bed(double x, double z) { return -2.0; }
+        };
+        com.dan.buoyancy.Cog cog = new com.dan.buoyancy.Cog("Kogge");
+        cog.place(tidal, 0, 0, 0);
+        for (double t = 0; t < 60; t += 0.05) cog.step(tidal, 0.05);
+        check(Math.abs(cog.draft - 2.0) < 0.35 && cog.gm > 0.5 && Math.abs(cog.y - 1.0) < 0.1 && !cog.grounded(),
+                f("Kogge 23,3 × 7,6 m: schwimmt bei NHN +1,0 m mit mittlerem Tiefgang %.2f m, GM %.1f m, %.0f t", cog.draft, cog.gm, cog.mass() / 1000));
+        for (double t = 0; t < 3 * 3600; t += 1) { lvl[0] = 1.0 - 3.0 * t / (3 * 3600); cog.step(tidal, 1); }
+        check(cog.grounded() && Math.abs(cog.y - (-2.0 + cog.draftDesign)) < 0.02 && Math.abs(Math.toDegrees(cog.roll)) < 1 && Math.abs(Math.toDegrees(cog.pitch)) < 1,
+                f("Ebbe bis NHN −2 m: sie sitzt aufrecht auf dem flachen Boden (Kiel auf dem Grund, %.1f° Schlagseite)", Math.toDegrees(cog.roll)));
+        for (double t = 0; t < 3 * 3600; t += 1) { lvl[0] = -2.0 + 3.0 * t / (3 * 3600); cog.step(tidal, 1); }
+        check(!cog.grounded() && Math.abs(cog.y - 1.0) < 0.15, f("die Flut hebt sie wieder (Wasserlinie bei NHN %+.2f m)", cog.y));
+        cog.via(0, 0, 2.5).via(0, -200, 2.5).via(150, -400, 2.0);
+        cog.start(tidal);
+        double sailMax = 0;
+        for (double t = 0; t < 900 && !cog.done(); t += 0.5) { cog.step(tidal, 0.5); sailMax = Math.max(sailMax, cog.sail); }
+        double end = Math.hypot(cog.x - 150, cog.z + 400);
+        for (double t = 0; t < 60; t += 0.5) cog.step(tidal, 0.5);
+        check(cog.done() && end < 6 && sailMax > 0.9 && cog.sail < 0.3 && cog.speed() < 0.2,
+                f("Fahrt mit gesetztem Segel über zwei Wegpunkte, am Ziel %.1f m daneben, Segel wieder aufgetucht", end));
+        com.dan.buoyancy.Mesh cm0 = com.dan.buoyancy.Mesh.cog(cog, 0), cm1 = com.dan.buoyancy.Mesh.cog(cog, 1);
+        check(cm0.triangles() > 500 && cm1.triangles() > cm0.triangles(), f("Netz der Kogge: %d Dreiecke aufgetucht, %d mit Segel", cm0.triangles(), cm1.triangles()));
+
         lines.add(bad == 0 ? "Alles in Ordnung." : bad + " Prüfungen fehlgeschlagen.");
         return lines;
     }
